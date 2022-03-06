@@ -27,9 +27,16 @@ view model =
 
 
 ## Building
-Simply run `elm make`:
+Symlink the included murmur3 library into `elm-stuff`:
 ```
-elm make
+mkdir -p elm-stuff/packages/Skinney/murmur3
+ln -s ../../../../extras/Skinney/murmur3/2.0.6 elm-stuff/packages/Skinney/murmur3 
+```
+(This is an elm-css requirement, and this step needs to be done because the original murmur3 files have been removed from where it was originally hosted)
+
+Then run `elm make`:
+```
+elm make --yes
 ```
 
 ## Thanks
