@@ -9,7 +9,6 @@ import Html.Events exposing (onClick, onInput, onCheck)
 import Json.Decode as Json
 import SyntaxHighlight as SH
 import SyntaxHighlight.Theme as Theme
-import AnimationFrame
 
 
 main : Program Never Model Msg
@@ -18,7 +17,7 @@ main =
         { init = ( initModel, Cmd.none )
         , view = view
         , update = update
-        , subscriptions = \_ -> AnimationFrame.times Frame
+        , subscriptions = always Sub.none
         }
 
 
@@ -235,7 +234,9 @@ update msg ({ highlight } as model) =
                 |> flip (,) Cmd.none
 
         OnScroll scroll ->
-            ( { model | scroll = scroll }
+            ( getLangModel model.currentLanguage model
+                |> (\m -> { m | scroll = scroll })
+                |> updateLangModel model.currentLanguage { model | scroll = scroll }
             , Cmd.none
             )
 
