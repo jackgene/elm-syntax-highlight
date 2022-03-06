@@ -1,5 +1,14 @@
+# Elm
 elm-stuff
-.DS_Store
+
+# Demo
+demo/elm-stuff
 demo/elm.js
 demo/elm-themes.js
 demo/themes.html
+
+#IDEA
+.idea
+
+# OS
+.DS_Store
