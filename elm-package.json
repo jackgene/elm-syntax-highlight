@@ -1,7 +1,7 @@
 {
     "version": "2.1.0",
     "summary": "Syntax highlighting in Elm",
-    "repository": "https://github.com/pablohirafuji/elm-syntax-highlight.git",
+    "repository": "https://github.com/jackgene/elm-syntax-highlight.git",
     "license": "Apache-2.0",
     "source-directories": [
         "src"
