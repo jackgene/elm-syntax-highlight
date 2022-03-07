@@ -6,6 +6,7 @@ module SyntaxHighlight.Theme
         , oneDark
         )
 
+import Css.Global exposing (Snippet)
 import SyntaxHighlight.Theme.Monokai as Monokai
 import SyntaxHighlight.Theme.GitHub as GitHub
 import SyntaxHighlight.Theme.OneDark as OneDark
@@ -14,7 +15,7 @@ import SyntaxHighlight.Theme.OneDark as OneDark
 -- Add all themes name and code here to show in the Demo and Themes page
 
 
-all : List ( String, String )
+all : List ( String, List Snippet )
 all =
     [ ( "Monokai", monokai )
     , ( "GitHub", gitHub )
@@ -22,16 +23,16 @@ all =
     ]
 
 
-monokai : String
+monokai : List Snippet
 monokai =
     Monokai.css
 
 
-gitHub : String
+gitHub : List Snippet
 gitHub =
     GitHub.css
 
 
-oneDark : String
+oneDark : List Snippet
 oneDark =
     OneDark.css

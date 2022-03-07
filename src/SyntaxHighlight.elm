@@ -1,18 +1,9 @@
 module SyntaxHighlight
     exposing
         ( HCode
-        , toBlockHtml
-        , toInlineHtml
-        , elm
-        , xml
-        , javascript
-        , css
-        , python
-        , Theme
-        , useTheme
-        , monokai
-        , gitHub
-        , oneDark
+        , toBlockHtml, toInlineHtml
+        , elm, xml, javascript, css, python
+        , Theme, useTheme, monokai, gitHub, oneDark
         , Highlight(..)
         , highlightLines
         )
@@ -24,7 +15,7 @@ module SyntaxHighlight
 
 ## Html view
 
-@docs toBlockHtml, toInlineHtml, toStaticBlockHtml, toStaticInlineHtml
+@docs toBlockHtml, toInlineHtml
 
 
 ## Helpers
@@ -43,14 +34,10 @@ Error while parsing should not happen. If it happens, please [open an issue](htt
 
 @docs Theme, useTheme, monokai, gitHub, oneDark
 
-
-## Console view
-
-@docs ConsoleOptions, toConsole
-
 -}
 
-import Html.Styled as Html exposing (Html, text)
+import Css.Global exposing (Snippet)
+import Html.Styled exposing (Html)
 import Parser
 import SyntaxHighlight.Line as Line exposing (Line, Highlight)
 import SyntaxHighlight.View as View
@@ -140,7 +127,7 @@ python =
 {-| A theme defines the background and syntax colors.
 -}
 type Theme
-    = Theme String
+    = Theme (List Snippet)
 
 
 {-| Transform a theme into Html. Any highlighted code transformed into Html in the same page will be themed according to the chosen `Theme`.
@@ -165,8 +152,8 @@ All themes can be found [here](https://pablohirafuji.github.io/elm-syntax-highli
 
 -}
 useTheme : Theme -> Html msg
-useTheme (Theme theme) =
-    Html.node "style" [] [ text theme ]
+useTheme (Theme snippets) =
+    Css.Global.global snippets
 
 
 {-| Monokai inspired theme.

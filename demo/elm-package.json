@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Elm Syntax Highlight Demo",
-    "repository": "https://github.com/pablohirafuji/elm-syntax-highlight.git",
+    "repository": "https://github.com/jackgene/elm-syntax-highlight.git",
     "license": "BSD3",
     "source-directories": [
         ".",

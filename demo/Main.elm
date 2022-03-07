@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Css.Global exposing (global)
 import Time exposing (Time)
 import Html.Styled as Html exposing
   (Html, div, text, textarea, option, select, label, ul, li, input, button)
@@ -48,7 +49,7 @@ initModel =
     , lineCountStart = 1
     , lineCount = Just 1
     , theme = "Monokai"
-    , customTheme = Theme.monokai
+    , customTheme = "/* CSS */"
     , highlight = HighlightModel (Just SH.Add) 1 3
     }
 
@@ -360,10 +361,8 @@ syntaxTheme : String -> String -> Html msg
 syntaxTheme currentTheme customTheme =
     Dict.fromList Theme.all
         |> Dict.get currentTheme
-        |> Maybe.withDefault customTheme
-        |> text
-        |> List.singleton
-        |> Html.node "style" []
+        |> Maybe.map global
+        |> Maybe.withDefault (Html.node "style" [] [ text customTheme ])
 
 
 viewLanguage : String -> (Maybe Int -> String -> HighlightModel -> Html Msg) -> Model -> Html Msg

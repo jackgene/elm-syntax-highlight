@@ -1,6 +1,7 @@
 module SyntaxHighlight.Theme.Type exposing (..)
 
-import SyntaxHighlight.Style as Style exposing (Style, RequiredStyles)
+import Css.Global exposing (Snippet)
+import SyntaxHighlight.Style as Style exposing (RequiredStyles)
 import SyntaxHighlight.Language.Elm as Elm
 import SyntaxHighlight.Language.Css as Css
 import SyntaxHighlight.Language.Javascript as Javascript
@@ -10,7 +11,6 @@ import SyntaxHighlight.Language.Python as Python
 
 type alias Theme =
     { requiredStyles : RequiredStyles
-    , customStyles : List ( List Syntax, Style )
     }
 
 
@@ -22,22 +22,21 @@ type Syntax
     | Python Python.Syntax
 
 
-toCss : Theme -> String
-toCss { requiredStyles, customStyles } =
-    [ ( ".elmsh", requiredStyles.default )
-    , ( ".elmsh-hl", requiredStyles.highlight )
-    , ( ".elmsh-add", requiredStyles.addition )
-    , ( ".elmsh-del", requiredStyles.deletion )
-    , ( ".elmsh-comm", requiredStyles.comment )
-    , ( ".elmsh1", requiredStyles.style1 )
-    , ( ".elmsh2", requiredStyles.style2 )
-    , ( ".elmsh3", requiredStyles.style3 )
-    , ( ".elmsh4", requiredStyles.style4 )
-    , ( ".elmsh5", requiredStyles.style5 )
-    , ( ".elmsh6", requiredStyles.style6 )
-    , ( ".elmsh7", requiredStyles.style7 )
+toCss : Theme -> List Snippet
+toCss { requiredStyles } =
+    [ ( "elmsh", requiredStyles.default )
+    , ( "elmsh-hl", requiredStyles.highlight )
+    , ( "elmsh-add", requiredStyles.addition )
+    , ( "elmsh-del", requiredStyles.deletion )
+    , ( "elmsh-comm", requiredStyles.comment )
+    , ( "elmsh1", requiredStyles.style1 )
+    , ( "elmsh2", requiredStyles.style2 )
+    , ( "elmsh3", requiredStyles.style3 )
+    , ( "elmsh4", requiredStyles.style4 )
+    , ( "elmsh5", requiredStyles.style5 )
+    , ( "elmsh6", requiredStyles.style6 )
+    , ( "elmsh7", requiredStyles.style7 )
     ]
-        ++ List.map (Tuple.mapFirst syntaxesToSelectors) customStyles
         |> Style.toCss
 
 

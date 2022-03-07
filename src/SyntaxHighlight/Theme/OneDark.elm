@@ -1,6 +1,8 @@
 module SyntaxHighlight.Theme.OneDark exposing (css, theme)
 
-import SyntaxHighlight.Style exposing (RequiredStyles, Color(..), noEmphasis, backgroundColor, textColor, italic)
+import Css exposing (rgb, rgba)
+import Css.Global exposing (Snippet)
+import SyntaxHighlight.Style exposing (RequiredStyles, noEmphasis, backgroundColor, textColor, italic)
 import SyntaxHighlight.Theme.Type exposing (Theme, toCss)
 
 
@@ -24,30 +26,28 @@ import SyntaxHighlight.Theme.Type exposing (Theme, toCss)
 -}
 
 
-css : String
-css =
-    toCss theme
+css : List Snippet
+css = toCss theme
 
 
 theme : Theme
 theme =
     { requiredStyles = requiredStyles
-    , customStyles = []
     }
 
 
 requiredStyles : RequiredStyles
 requiredStyles =
-    { default = noEmphasis (Hex "#abb2bf") (Hex "#282c34")
-    , highlight = backgroundColor (Rgba 229 231 235 0.1)
-    , addition = backgroundColor (Rgba 40 124 82 0.4)
-    , deletion = backgroundColor (Rgba 136 64 67 0.4)
-    , comment = textColor (Hex "#5c6370") |> italic
-    , style1 = textColor (Hex "#d19a66")
-    , style2 = textColor (Hex "#98c379")
-    , style3 = textColor (Hex "#c678dd")
-    , style4 = textColor (Hex "#c678dd")
-    , style5 = textColor (Hex "#61aeee")
-    , style6 = textColor (Hex "#d19a66")
-    , style7 = textColor (Hex "#abb2bf")
+    { default = noEmphasis (rgb 0xab 0xb2 0xbf) (rgb 0x28 0x2c 0x34)
+    , highlight = backgroundColor (rgba 229 231 235 0.1)
+    , addition = backgroundColor (rgba 40 124 82 0.4)
+    , deletion = backgroundColor (rgba 136 64 67 0.4)
+    , comment = textColor (rgb 0x5c 0x63 0x70) |> italic
+    , style1 = textColor (rgb 0xd1 0x9a 0x66)
+    , style2 = textColor (rgb 0x98 0xc3 0x79)
+    , style3 = textColor (rgb 0xc6 0x78 0xdd)
+    , style4 = textColor (rgb 0xc6 0x78 0xdd)
+    , style5 = textColor (rgb 0x61 0xae 0xee)
+    , style6 = textColor (rgb 0xd1 0x9a 0x66)
+    , style7 = textColor (rgb 0xab 0xb2 0xbf)
     }

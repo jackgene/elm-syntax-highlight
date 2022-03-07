@@ -14,6 +14,9 @@ module SyntaxHighlight.Style exposing (..)
      - **Style7**: Argument, parameter
 -}
 
+import Css exposing (Color, Style, fontStyle, fontWeight)
+import Css.Global exposing (Snippet, class)
+
 
 type Required
     = Default
@@ -43,130 +46,32 @@ type alias RequiredStyles =
     }
 
 
-type alias Style =
-    { isBold : Bool
-    , isItalic : Bool
-    , isUnderline : Bool
-    , text : Color
-    , background : Color
-    }
-
-
-type Color
-    = DefaultColor
-    | Hex String
-    | Rgb Int Int Int
-    | Rgba Int Int Int Float
-
-
 noEmphasis : Color -> Color -> Style
-noEmphasis text background =
-    { isBold = False
-    , isItalic = False
-    , isUnderline = False
-    , text = text
-    , background = background
-    }
+noEmphasis text background = Css.batch [ textColor text, backgroundColor background ]
 
 
 textColor : Color -> Style
-textColor text =
-    { isBold = False
-    , isItalic = False
-    , isUnderline = False
-    , text = text
-    , background = DefaultColor
-    }
+textColor text = Css.color text
 
 
 backgroundColor : Color -> Style
-backgroundColor background =
-    { isBold = False
-    , isItalic = False
-    , isUnderline = False
-    , text = DefaultColor
-    , background = background
-    }
+backgroundColor background = Css.backgroundColor background
 
 
 italic : Style -> Style
-italic style =
-    { style | isItalic = True }
+italic style = Css.batch [ style, fontStyle Css.italic ]
 
 
 bold : Style -> Style
-bold style =
-    { style | isBold = True }
+bold style = Css.batch [ style, fontWeight Css.bold ]
 
 
 
 -- To Css string helpers
 
 
-toCss : List ( String, Style ) -> String
+toCss : List ( String, Style ) -> List Snippet
 toCss classes =
-    List.map toCssClass classes
-        |> String.concat
-
-
-toCssClass : ( String, Style ) -> String
-toCssClass ( selectors, style ) =
-    if String.isEmpty selectors then
-        ""
-    else
-        selectors ++ " {" ++ styleToCss style ++ "}"
-
-
-styleToCss : Style -> String
-styleToCss { isBold, isItalic, isUnderline, text, background } =
-    String.concat
-        [ emptyIfFalse isBold "font-weight: bold;"
-        , emptyIfFalse isItalic "font-style: italic;"
-        , emptyIfFalse isUnderline "text-decoration: underline;"
-        , colorToCss "color: " text
-        , colorToCss "background: " background
-        ]
-
-
-emptyIfFalse : Bool -> String -> String
-emptyIfFalse bool str =
-    if bool then
-        str
-    else
-        ""
-
-
-colorToCss : String -> Color -> String
-colorToCss property color =
-    case color of
-        DefaultColor ->
-            ""
-
-        Hex hex ->
-            property ++ hex ++ ";"
-
-        Rgb r g b ->
-            String.concat
-                [ property
-                , "rgb("
-                , toString r
-                , ", "
-                , toString g
-                , ","
-                , toString b
-                , ");"
-                ]
-
-        Rgba r g b a ->
-            String.concat
-                [ property
-                , "rgba("
-                , toString r
-                , ", "
-                , toString g
-                , ","
-                , toString b
-                , ", "
-                , toString a
-                , ");"
-                ]
+    List.map
+    ( \(name, style) -> class name [ style ] )
+    classes
