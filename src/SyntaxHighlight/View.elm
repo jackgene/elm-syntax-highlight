@@ -1,7 +1,7 @@
 module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml, toStaticBlockHtml, toStaticInlineHtml, toConsole, ConsoleOptions)
 
-import Html exposing (Html, text, span, br, code, div, pre)
-import Html.Attributes exposing (class, classList, attribute)
+import Html.Styled as Html exposing (Html, text, span, code, div, pre)
+import Html.Styled.Attributes exposing (class, classList, attribute)
 import SyntaxHighlight.Line exposing (..)
 import SyntaxHighlight.Style exposing (Required(..))
 

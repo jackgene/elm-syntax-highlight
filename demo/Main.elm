@@ -1,11 +1,12 @@
 module Main exposing (..)
 
 import Time exposing (Time)
-import Html exposing (Html, div, text, p, textarea, pre, code, option, select, label, ul, li, input, button)
-import Html.Attributes exposing (defaultValue, id, class, value, spellcheck, selected, style, type_, placeholder, checked, classList)
+import Html.Styled as Html exposing
+  (Html, div, text, textarea, option, select, label, ul, li, input, button)
+import Html.Styled.Attributes as Attributes exposing
+  (defaultValue, class, value, spellcheck, selected, style, type_, checked, classList)
 import Dict exposing (Dict)
-import Html.Lazy
-import Html.Events exposing (onClick, onInput, onCheck)
+import Html.Styled.Events as Events exposing (onClick, onInput, onCheck)
 import Json.Decode as Json
 import SyntaxHighlight as SH
 import SyntaxHighlight.Theme as Theme
@@ -330,7 +331,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ Html.node "style" [] [ text (textareaStyle model) ]
-        , Html.Lazy.lazy2 syntaxTheme model.theme model.customTheme
+        , syntaxTheme model.theme model.customTheme
         , viewLanguage "Elm" toHtmlElm model
         , viewLanguage "Javascript" toHtmlJavascript model
         , viewLanguage "Xml" toHtmlXml model
@@ -393,7 +394,7 @@ viewLanguage thisLang parser ({ currentLanguage, lineCount } as model) =
                         , ( "will-change", "transform" )
                         ]
                     ]
-                    [ Html.Lazy.lazy3 parser
+                    [ parser
                         lineCount
                         langModel.code
                         langModel.highlight
@@ -412,7 +413,7 @@ viewTextarea thisLang codeStr { showLineCount } =
             ]
         , onInput (SetText thisLang)
         , spellcheck False
-        , Html.Events.on "scroll"
+        , Events.on "scroll"
             (Json.map2 Scroll
                 (Json.at [ "target", "scrollTop" ] Json.int)
                 (Json.at [ "target", "scrollLeft" ] Json.int)
@@ -505,7 +506,7 @@ viewOptions ({ currentLanguage, showLineCount, lineCountStart, theme } as model)
                 , select
                     [ Json.at [ "target", "value" ] Json.string
                         |> Json.map SetLanguage
-                        |> Html.Events.on "change"
+                        |> Events.on "change"
                     ]
                   <|
                     viewSelectOptions
@@ -517,7 +518,7 @@ viewOptions ({ currentLanguage, showLineCount, lineCountStart, theme } as model)
             [ label []
                 [ text "Color Scheme: "
                 , select
-                    [ Html.Events.on "change"
+                    [ Events.on "change"
                         (Json.map SetColorScheme (Json.at [ "target", "value" ] Json.string))
                     ]
                   <|
@@ -546,7 +547,7 @@ customTheme model =
         , onInput SetCustomColorScheme
         , spellcheck False
         , style [ ( "width", "100%" ) ]
-        , Html.Attributes.rows 10
+        , Attributes.rows 10
         ]
         []
 
@@ -561,7 +562,7 @@ viewHighlightOptions { mode, start, end } =
                     [ Json.at [ "target", "value" ] Json.string
                         |> Json.map toHighlightMode
                         |> Json.map SetHighlightMode
-                        |> Html.Events.on "change"
+                        |> Events.on "change"
                     ]
                     [ option [ selected (mode == Nothing) ] [ text "No highlight" ]
                     , option [ selected (mode == Just SH.Highlight) ] [ text "Highlight" ]
@@ -598,8 +599,8 @@ numberInput labelStr defaultVal msg =
         [ text labelStr
         , input
             [ type_ "number"
-            , Html.Attributes.min "-999"
-            , Html.Attributes.max "999"
+            , Attributes.min "-999"
+            , Attributes.max "999"
             , onInput (String.toInt >> Result.withDefault 0 >> msg)
             , defaultValue (toString defaultVal)
             ]

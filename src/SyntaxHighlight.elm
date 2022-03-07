@@ -54,7 +54,7 @@ Error while parsing should not happen. If it happens, please [open an issue](htt
 
 -}
 
-import Html exposing (Html, text)
+import Html.Styled as Html exposing (Html, text)
 import Parser
 import SyntaxHighlight.Line as Line exposing (Line, Highlight)
 import SyntaxHighlight.View as View
