@@ -3,10 +3,6 @@ module SyntaxHighlight
         ( HCode
         , toBlockHtml
         , toInlineHtml
-        , toStaticBlockHtml
-        , toStaticInlineHtml
-        , ConsoleOptions
-        , toConsole
         , elm
         , xml
         , javascript
@@ -99,63 +95,6 @@ toBlockHtml maybeStart (HCode lines) =
 toInlineHtml : HCode -> Html msg
 toInlineHtml (HCode lines) =
     View.toInlineHtml lines
-
-
-{-| Transform a highlighted code into a static (pure text) Html block. The `Maybe Int` argument is for showing or not line count and, if so, starting from what number.
--}
-toStaticBlockHtml : Maybe Int -> HCode -> String
-toStaticBlockHtml maybeStart (HCode lines) =
-    View.toStaticBlockHtml maybeStart lines
-
-
-{-| Transform a highlighted code into static (pure text) inline Html.
--}
-toStaticInlineHtml : HCode -> String
-toStaticInlineHtml (HCode lines) =
-    View.toStaticInlineHtml lines
-
-
-{-| Transform a highlighted code into a list of console highlighted strings given the styling options defined by `ConsoleOptions`.
-Each string in the list is a line.
--}
-toConsole : ConsoleOptions -> HCode -> List String
-toConsole options (HCode lines) =
-    View.toConsole options lines
-
-
-{-| Console styling options.
-You can use the [rtfeldman/console-print](http://package.elm-lang.org/packages/rtfeldman/console-print/latest) package to fill in the styles.
-
-The common uses of the styles are the following:
-
-  - **default**: Default style
-  - **highlight**: Highlight style
-  - **addition**: Addition style
-  - **deletion**: Deletion style
-  - **comment**: Comment
-  - **style1**: Number
-  - **style2**: Literal string, attribute value
-  - **style3**: Keyword, tag, operator symbols (=+-*/...)
-  - **style4**: Keyword 2, group symbols ({}(),), type signature
-  - **style5**: Function, attribute name
-  - **style6**: Literal keyword, capitalized types
-  - **style7**: Argument, parameter
-
--}
-type alias ConsoleOptions =
-    { default : String -> String
-    , highlight : String -> String
-    , addition : String -> String
-    , deletion : String -> String
-    , comment : String -> String
-    , style1 : String -> String
-    , style2 : String -> String
-    , style3 : String -> String
-    , style4 : String -> String
-    , style5 : String -> String
-    , style6 : String -> String
-    , style7 : String -> String
-    }
 
 
 {-| Parse Elm syntax.
