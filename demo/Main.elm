@@ -48,7 +48,7 @@ initModel =
     , showLineCount = True
     , lineCountStart = 1
     , lineCount = Just 1
-    , theme = "Monokai"
+    , theme = "Darcula"
     , customTheme = "/* CSS */"
     , highlight = HighlightModel (Just SH.Add) 1 3
     }

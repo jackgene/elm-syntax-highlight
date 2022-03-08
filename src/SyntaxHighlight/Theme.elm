@@ -7,6 +7,7 @@ module SyntaxHighlight.Theme
         )
 
 import Css.Global exposing (Snippet)
+import SyntaxHighlight.Theme.Darcula as Darcula
 import SyntaxHighlight.Theme.Monokai as Monokai
 import SyntaxHighlight.Theme.GitHub as GitHub
 import SyntaxHighlight.Theme.OneDark as OneDark
@@ -17,10 +18,16 @@ import SyntaxHighlight.Theme.OneDark as OneDark
 
 all : List ( String, List Snippet )
 all =
-    [ ( "Monokai", monokai )
+    [ ( "Darcula", darcula )
+    , ( "Monokai", monokai )
     , ( "GitHub", gitHub )
     , ( "One Dark", oneDark )
     ]
+
+
+darcula : List Snippet
+darcula =
+    Darcula.css
 
 
 monokai : List Snippet
