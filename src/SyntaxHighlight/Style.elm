@@ -30,22 +30,6 @@ type Required
     | Style7
 
 
-type alias RequiredStyles =
-    { default : Style
-    , highlight : Style
-    , addition : Style
-    , deletion : Style
-    , comment : Style
-    , style1 : Style
-    , style2 : Style
-    , style3 : Style
-    , style4 : Style
-    , style5 : Style
-    , style6 : Style
-    , style7 : Style
-    }
-
-
 noEmphasis : Color -> Color -> Style
 noEmphasis text background = Css.batch [ textColor text, backgroundColor background ]
 

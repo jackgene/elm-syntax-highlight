@@ -2,7 +2,7 @@ module SyntaxHighlight.Theme.OneDark exposing (css, theme)
 
 import Css exposing (rgb, rgba)
 import Css.Global exposing (Snippet)
-import SyntaxHighlight.Style exposing (RequiredStyles, noEmphasis, backgroundColor, textColor, italic)
+import SyntaxHighlight.Style exposing (noEmphasis, backgroundColor, textColor, italic)
 import SyntaxHighlight.Theme.Type exposing (Theme, toCss)
 
 
@@ -32,12 +32,6 @@ css = toCss theme
 
 theme : Theme
 theme =
-    { requiredStyles = requiredStyles
-    }
-
-
-requiredStyles : RequiredStyles
-requiredStyles =
     { default = noEmphasis (rgb 0xab 0xb2 0xbf) (rgb 0x28 0x2c 0x34)
     , highlight = backgroundColor (rgba 229 231 235 0.1)
     , addition = backgroundColor (rgba 40 124 82 0.4)

@@ -2,7 +2,7 @@ module SyntaxHighlight.Theme.GitHub exposing (css, theme)
 
 import Css exposing (rgb)
 import Css.Global exposing (Snippet)
-import SyntaxHighlight.Style exposing (RequiredStyles, noEmphasis, backgroundColor, textColor)
+import SyntaxHighlight.Style exposing (noEmphasis, backgroundColor, textColor)
 import SyntaxHighlight.Theme.Type exposing (Theme, toCss)
 
 
@@ -16,12 +16,6 @@ css =
 
 theme : Theme
 theme =
-    { requiredStyles = requiredStyles
-    }
-
-
-requiredStyles : RequiredStyles
-requiredStyles =
     { default = noEmphasis (rgb 0x24 0x29 0x2e) (rgb 0xff 0xff 0xff)
     , highlight = backgroundColor (rgb 0xff 0xfb 0xdd)
     , addition = backgroundColor (rgb 0xea 0xff 0xea)

@@ -2,8 +2,8 @@ module SyntaxHighlight.Theme.Monokai exposing (css, theme)
 
 import Css exposing (rgb)
 import Css.Global exposing (Snippet)
-import SyntaxHighlight.Style exposing (RequiredStyles, noEmphasis, backgroundColor, textColor)
-import SyntaxHighlight.Theme.Type exposing (Syntax(..), Theme, toCss)
+import SyntaxHighlight.Style exposing (noEmphasis, backgroundColor, textColor)
+import SyntaxHighlight.Theme.Type exposing (Theme, toCss)
 
 
 -- Monokai inspired theme
@@ -16,12 +16,6 @@ css =
 
 theme : Theme
 theme =
-    { requiredStyles = requiredStyles
-    }
-
-
-requiredStyles : RequiredStyles
-requiredStyles =
     { default = noEmphasis (rgb 0xf8 0xf8 0xf2) (rgb 0x23 0x24 0x1f)
     , highlight = backgroundColor (rgb 0x34 0x34 0x34)
     , addition = backgroundColor (rgb 0x00 0x38 0x00)
