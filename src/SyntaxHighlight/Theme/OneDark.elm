@@ -2,8 +2,7 @@ module SyntaxHighlight.Theme.OneDark exposing (css, theme)
 
 import Css exposing (rgb, rgba)
 import Css.Global exposing (Snippet)
-import SyntaxHighlight.Style exposing (noEmphasis, backgroundColor, textColor, italic)
-import SyntaxHighlight.Theme.Common exposing (Theme, toCss)
+import SyntaxHighlight.Theme.Common exposing (..)
 
 
 {-

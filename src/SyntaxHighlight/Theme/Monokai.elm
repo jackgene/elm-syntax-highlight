@@ -2,8 +2,7 @@ module SyntaxHighlight.Theme.Monokai exposing (css, theme)
 
 import Css exposing (rgb)
 import Css.Global exposing (Snippet)
-import SyntaxHighlight.Style exposing (noEmphasis, backgroundColor, textColor)
-import SyntaxHighlight.Theme.Common exposing (Theme, toCss)
+import SyntaxHighlight.Theme.Common exposing (..)
 
 
 -- Monokai inspired theme
