@@ -1,23 +1,15 @@
-module SyntaxHighlight.Language.Helpers
-    exposing
-        ( isWhitespace
-        , whitespaceCharSet
-        , isSpace
-        , isLineBreak
-        , number
-        , isNumber
-        , Delimiter
-        , delimited
-        , thenIgnore
-        , escapable
-        , isEscapable
-        , consThen
-        , addThen
-        )
+module SyntaxHighlight.Language.Common exposing
+  ( isWhitespace, whitespaceCharSet, isSpace, isLineBreak
+  , number, isNumber, Delimiter, delimited
+  , thenIgnore, escapable, isEscapable, consThen, addThen
+  )
 
 import Set exposing (Set)
 import Char
-import Parser exposing (Parser, (|.), oneOf, keep, Count(..), oneOrMore, symbol, ignore, zeroOrMore, lazy, fail, source, map, andThen, delayedCommit)
+import Parser exposing
+  (Parser, (|.), oneOf, keep, Count(..), oneOrMore, symbol, ignore
+  , zeroOrMore, fail, source, map, andThen, delayedCommit)
+import SyntaxHighlight.Model as Model
 
 
 isWhitespace : Char -> Bool
