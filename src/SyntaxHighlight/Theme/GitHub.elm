@@ -1,18 +1,11 @@
-module SyntaxHighlight.Theme.GitHub exposing (css, theme)
+module SyntaxHighlight.Theme.GitHub exposing (theme)
 
 import Css exposing (rgb)
-import Css.Global exposing (Snippet)
+import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
 
 
 -- GitHub inspired theme
-
-
-css : List Snippet
-css =
-    toCss theme
-
-
 theme : Theme
 theme =
     { default = noEmphasis (rgb 0x24 0x29 0x2e) (rgb 0xff 0xff 0xff)

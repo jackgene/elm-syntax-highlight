@@ -1,7 +1,7 @@
-module SyntaxHighlight.Theme.OneDark exposing (css, theme)
+module SyntaxHighlight.Theme.OneDark exposing (theme)
 
 import Css exposing (rgb, rgba)
-import Css.Global exposing (Snippet)
+import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
 
 
@@ -23,12 +23,6 @@ import SyntaxHighlight.Theme.Common exposing (..)
    hue-6:   #d19a66
    hue-6-2: #e6c07b
 -}
-
-
-css : List Snippet
-css = toCss theme
-
-
 theme : Theme
 theme =
     { default = noEmphasis (rgb 0xab 0xb2 0xbf) (rgb 0x28 0x2c 0x34)

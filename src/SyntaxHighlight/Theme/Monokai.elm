@@ -1,18 +1,11 @@
-module SyntaxHighlight.Theme.Monokai exposing (css, theme)
+module SyntaxHighlight.Theme.Monokai exposing (theme)
 
 import Css exposing (rgb)
-import Css.Global exposing (Snippet)
+import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
 
 
 -- Monokai inspired theme
-
-
-css : List Snippet
-css =
-    toCss theme
-
-
 theme : Theme
 theme =
     { default = noEmphasis (rgb 0xf8 0xf8 0xf2) (rgb 0x23 0x24 0x1f)

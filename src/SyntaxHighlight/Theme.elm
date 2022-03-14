@@ -1,45 +1,23 @@
-module SyntaxHighlight.Theme
-    exposing
-        ( all
-        , monokai
-        , gitHub
-        , oneDark
-        )
+module SyntaxHighlight.Theme exposing (..)
 
-import Css.Global exposing (Snippet)
+import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Darcula as Darcula
 import SyntaxHighlight.Theme.Monokai as Monokai
 import SyntaxHighlight.Theme.GitHub as GitHub
 import SyntaxHighlight.Theme.OneDark as OneDark
 
 
--- Add all themes name and code here to show in the Demo and Themes page
+darcula : Theme
+darcula = Darcula.theme
 
 
-all : List ( String, List Snippet )
-all =
-    [ ( "Darcula", darcula )
-    , ( "Monokai", monokai )
-    , ( "GitHub", gitHub )
-    , ( "One Dark", oneDark )
-    ]
+monokai : Theme
+monokai = Monokai.theme
 
 
-darcula : List Snippet
-darcula =
-    Darcula.css
+gitHub : Theme
+gitHub = GitHub.theme
 
 
-monokai : List Snippet
-monokai =
-    Monokai.css
-
-
-gitHub : List Snippet
-gitHub =
-    GitHub.css
-
-
-oneDark : List Snippet
-oneDark =
-    OneDark.css
+oneDark : Theme
+oneDark = OneDark.theme
