@@ -1,16 +1,16 @@
-module SyntaxHighlight.Language exposing (javascript)
+module SyntaxHighlight.Language exposing (typeScript)
 
 
 import Parser
-import SyntaxHighlight.Language.Javascript as Javascript
+import SyntaxHighlight.Language.TypeScript as TypeScript
 import SyntaxHighlight.Model exposing (..)
 
 
 {-| Parse Javascript syntax.
 -}
-javascript : String -> Result Parser.Error Block
-javascript =
-  Javascript.parseTokensReversed >> Result.map reverseAndBreakIntoLines
+typeScript : String -> Result Parser.Error Block
+typeScript =
+  TypeScript.parseTokensReversed >> Result.map reverseAndBreakIntoLines
 
 
 reverseAndBreakIntoLines : List Token -> Block

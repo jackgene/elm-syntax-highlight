@@ -1,4 +1,4 @@
-module SyntaxHighlight.Language.Javascript exposing (parseTokensReversed)
+module SyntaxHighlight.Language.TypeScript exposing (parseTokensReversed)
 
 import Set exposing (Set)
 import Parser exposing (Parser, oneOf, zeroOrMore, oneOrMore, ignore, symbol, (|.), (|=), source, keep, Count(..), Error, map, andThen, repeat, succeed)
