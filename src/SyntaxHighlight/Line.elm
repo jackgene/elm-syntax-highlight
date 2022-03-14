@@ -1,15 +1,6 @@
-module SyntaxHighlight.Line
-    exposing
-        ( Line
-        , Highlight(..)
-        , highlightLines
-        , Fragment
-        )
+module SyntaxHighlight.Line exposing (highlightLines)
 
 {-| A parsed highlighted line.
-
-@docs Line, Fragment, Highlight
-
 
 ## Helpers
 
@@ -17,30 +8,7 @@ module SyntaxHighlight.Line
 
 -}
 
-import SyntaxHighlight.Style as Style
-
-
-{-| A line holds information about its fragments and if is highlighted in any way.
--}
-type alias Line =
-    { fragments : List Fragment
-    , highlight : Maybe Highlight
-    }
-
-
-{-| A fragment holds information about the text being styled, the style and additional class to be applied.
--}
-type alias Fragment =
-    { text : String
-    , requiredStyle : Style.Required
-    , additionalClass : String
-    }
-
-
-type Highlight
-    = Normal
-    | Add
-    | Del
+import SyntaxHighlight.Model exposing (..)
 
 
 highlightLines : Maybe Highlight -> Int -> Int -> List Line -> List Line

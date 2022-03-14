@@ -1,17 +1,11 @@
 module SyntaxHighlight
     exposing
-        ( HCode
-        , toBlockHtml, toInlineHtml
-        , elm, xml, javascript, css, python
-        , Theme, useTheme, monokai, gitHub, oneDark
-        , Highlight(..)
-        , highlightLines
+        ( toBlockHtml, toInlineHtml
+        , useTheme
+        , Highlight, highlightLines
         )
 
 {-| Syntax highlighting in Elm.
-
-@docs HCode
-
 
 ## Html view
 
@@ -32,35 +26,32 @@ Error while parsing should not happen. If it happens, please [open an issue](htt
 
 ## Themes
 
-@docs Theme, useTheme, monokai, gitHub, oneDark
+@docs useTheme
 
 -}
 
-import Css.Global exposing (Snippet)
+import Css.Global exposing (Snippet, class)
 import Html.Styled exposing (Html)
-import Parser
-import SyntaxHighlight.Line as Line exposing (Line, Highlight)
+import SyntaxHighlight.Model as Model exposing (Theme)
 import SyntaxHighlight.View as View
-import SyntaxHighlight.Language.Elm as Elm
-import SyntaxHighlight.Language.Xml as Xml
-import SyntaxHighlight.Language.Javascript as Javascript
-import SyntaxHighlight.Language.Css as Css
-import SyntaxHighlight.Language.Python as Python
+--import SyntaxHighlight.Language.Elm as Elm
+--import SyntaxHighlight.Language.Xml as Xml
+--import SyntaxHighlight.Language.Css as Css
+--import SyntaxHighlight.Language.Python as Python
 import SyntaxHighlight.Theme as Theme
 
 
-{-| A highlighted code.
--}
-type HCode
-    = HCode (List Line)
+type alias Block = Model.Block
+type alias Line = Model.Line
+type alias Highlight = Model.Highlight
 
 
 {-| Transform a highlighted code into a Html block.
 The `Maybe Int` argument is for showing or not line count and, if so, starting from what number.
 -}
-toBlockHtml : Maybe Int -> HCode -> Html msg
-toBlockHtml maybeStart (HCode lines) =
-    View.toBlockHtml maybeStart lines
+toBlockHtml : Model.Theme -> Maybe Int -> Block -> Html msg
+toBlockHtml theme maybeStart lines =
+    View.toBlockHtml theme maybeStart lines
 
 
 {-| Transform a highlighted code into inline Html.
@@ -79,55 +70,9 @@ toBlockHtml maybeStart (HCode lines) =
             ]
 
 -}
-toInlineHtml : HCode -> Html msg
-toInlineHtml (HCode lines) =
-    View.toInlineHtml lines
-
-
-{-| Parse Elm syntax.
--}
-elm : String -> Result Parser.Error HCode
-elm =
-    Elm.toLines
-        >> Result.map HCode
-
-
-{-| Parse XML syntax.
--}
-xml : String -> Result Parser.Error HCode
-xml =
-    Xml.toLines
-        >> Result.map HCode
-
-
-{-| Parse Javascript syntax.
--}
-javascript : String -> Result Parser.Error HCode
-javascript =
-    Javascript.toLines
-        >> Result.map HCode
-
-
-{-| Parse CSS syntax.
--}
-css : String -> Result Parser.Error HCode
-css =
-    Css.toLines
-        >> Result.map HCode
-
-
-{-| Parse Python syntax.
--}
-python : String -> Result Parser.Error HCode
-python =
-    Python.toLines
-        >> Result.map HCode
-
-
-{-| A theme defines the background and syntax colors.
--}
-type Theme
-    = Theme (List Snippet)
+toInlineHtml : Model.Theme -> Line -> Html msg
+toInlineHtml theme line =
+    View.toInlineHtml theme line
 
 
 {-| Transform a theme into Html. Any highlighted code transformed into Html in the same page will be themed according to the chosen `Theme`.
@@ -152,44 +97,24 @@ All themes can be found [here](https://pablohirafuji.github.io/elm-syntax-highli
 
 -}
 useTheme : Theme -> Html msg
-useTheme (Theme snippets) =
-    Css.Global.global snippets
-
-
-{-| Monokai inspired theme.
--}
-monokai : Theme
-monokai =
-    Theme Theme.monokai
-
-
-{-| GitHub inspired theme.
--}
-gitHub : Theme
-gitHub =
-    Theme Theme.gitHub
-
-
-{-| Atom One Dark inspired theme.
--}
-oneDark : Theme
-oneDark =
-    Theme Theme.oneDark
-
-
-{-| Highlight type.
-
-  - `Highlight` will highlight the line in a way to differentiate it from the rest, like github's yellow background.
-  - `Add` will highlight in a manner that gives the ideia of new content added.
-  - `Del` will highlight in a manner that gives the ideia of removed content.
-
-The specific styles will depend on the chosen `Theme`.
-
--}
-type Highlight
-    = Highlight
-    | Add
-    | Del
+useTheme theme =
+  Css.Global.global
+  ( List.map
+    ( \(name, style) -> class name [ style ] )
+    [ ( "elmsh", theme.default )
+    , ( "elmsh-hl", theme.highlight )
+    , ( "elmsh-add", theme.addition )
+    , ( "elmsh-del", theme.deletion )
+    , ( "elmsh-comm", theme.comment )
+    , ( "elmsh1", theme.style1 )
+    , ( "elmsh2", theme.style2 )
+    , ( "elmsh3", theme.style3 )
+    , ( "elmsh4", theme.style4 )
+    , ( "elmsh5", theme.style5 )
+    , ( "elmsh6", theme.style6 )
+    , ( "elmsh7", theme.style7 )
+    ]
+  )
 
 
 {-| Highlight lines given a highlight type, start and end index.
@@ -197,22 +122,21 @@ If no highlight type is given (`Nothing`), it will remove any
 highlight from the line range.
 Negative indexes are taken starting from the *end* of the list.
 -}
-highlightLines : Maybe Highlight -> Int -> Int -> HCode -> HCode
-highlightLines maybeHighlight start end (HCode lines) =
-    let
-        maybeHighlight_ =
-            case maybeHighlight of
-                Nothing ->
-                    Nothing
-
-                Just Highlight ->
-                    Just Line.Normal
-
-                Just Add ->
-                    Just Line.Add
-
-                Just Del ->
-                    Just Line.Del
-    in
-        Line.highlightLines maybeHighlight_ start end lines
-            |> HCode
+highlightLines : Maybe Highlight -> Int -> Int -> Block -> Block
+highlightLines maybeHighlight start end lines = lines -- TODO no-op for now, fix
+    --let
+    --    maybeHighlight_ =
+    --        case maybeHighlight of
+    --            Nothing ->
+    --                Nothing
+    --
+    --            Just Highlight ->
+    --                Just Line.Normal
+    --
+    --            Just Add ->
+    --                Just Line.Add
+    --
+    --            Just Del ->
+    --                Just Line.Del
+    --in
+    --    Line.highlightLines maybeHighlight_ start end lines
