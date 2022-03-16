@@ -2,22 +2,11 @@ module SyntaxHighlight.Theme.Common exposing (..)
 
 import Css exposing (Color, Style, fontStyle, fontWeight)
 import Css.Global exposing (Snippet, class)
+import SyntaxHighlight.Model exposing (Theme)
 
 
-type alias Theme =
-  { default : Style
-  , highlight : Style
-  , addition : Style
-  , deletion : Style
-  , comment : Style
-  , style1 : Style
-  , style2 : Style
-  , style3 : Style
-  , style4 : Style
-  , style5 : Style
-  , style6 : Style
-  , style7 : Style
-  }
+noStyle : Style
+noStyle = Css.batch []
 
 
 noEmphasis : Color -> Color -> Style
@@ -45,15 +34,15 @@ toCss theme =
   List.map
   ( \(name, style) -> class name [ style ] )
   [ ( "elmsh", theme.default )
-  , ( "elmsh-hl", theme.highlight )
+  , ( "elmsh-hl", theme.selection )
   , ( "elmsh-add", theme.addition )
   , ( "elmsh-del", theme.deletion )
   , ( "elmsh-comm", theme.comment )
-  , ( "elmsh1", theme.style1 )
-  , ( "elmsh2", theme.style2 )
-  , ( "elmsh3", theme.style3 )
-  , ( "elmsh4", theme.style4 )
-  , ( "elmsh5", theme.style5 )
-  , ( "elmsh6", theme.style6 )
-  , ( "elmsh7", theme.style7 )
+  , ( "elmsh1", theme.number )
+  , ( "elmsh2", theme.string )
+  , ( "elmsh3", theme.keyword )
+  , ( "elmsh4", theme.declarationKeyword )
+  , ( "elmsh5", theme.functionDeclaration )
+  , ( "elmsh6", theme.literal )
+  , ( "elmsh7", theme.functionArgument )
   ]

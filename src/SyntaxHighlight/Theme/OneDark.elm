@@ -25,16 +25,24 @@ import SyntaxHighlight.Theme.Common exposing (..)
 -}
 theme : Theme
 theme =
-    { default = noEmphasis (rgb 0xab 0xb2 0xbf) (rgb 0x28 0x2c 0x34)
-    , highlight = backgroundColor (rgba 229 231 235 0.1)
-    , addition = backgroundColor (rgba 40 124 82 0.4)
-    , deletion = backgroundColor (rgba 136 64 67 0.4)
-    , comment = textColor (rgb 0x5c 0x63 0x70) |> italic
-    , style1 = textColor (rgb 0xd1 0x9a 0x66)
-    , style2 = textColor (rgb 0x98 0xc3 0x79)
-    , style3 = textColor (rgb 0xc6 0x78 0xdd)
-    , style4 = textColor (rgb 0xc6 0x78 0xdd)
-    , style5 = textColor (rgb 0x61 0xae 0xee)
-    , style6 = textColor (rgb 0xd1 0x9a 0x66)
-    , style7 = textColor (rgb 0xab 0xb2 0xbf)
-    }
+  { default = noEmphasis (rgb 0xab 0xb2 0xbf) (rgb 0x28 0x2c 0x34)
+  , selection = backgroundColor (rgba 229 231 235 0.1)
+  , addition = backgroundColor (rgba 40 124 82 0.4)
+  , deletion = backgroundColor (rgba 136 64 67 0.4)
+  , comment = textColor (rgb 0x5c 0x63 0x70) |> italic
+  , number = textColor (rgb 0xd1 0x9a 0x66)
+  , string = textColor (rgb 0x98 0xc3 0x79)
+  , keyword = textColor (rgb 0xc6 0x78 0xdd)
+  , declarationKeyword = textColor (rgb 0xc6 0x78 0xdd)
+  , functionDeclaration = textColor (rgb 0x61 0xae 0xee)
+  , literal = textColor (rgb 0xd1 0x9a 0x66)
+  , functionArgument = textColor (rgb 0xab 0xb2 0xbf)
+
+  , namespace = noStyle
+  , operator = noStyle
+  , typeDeclaration = noStyle
+  , typeReference = noStyle
+  , functionReference = noStyle
+  , field = noStyle
+  , annotation = noStyle
+  }
