@@ -1,7 +1,16 @@
 module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 
-import Html.Styled as Html exposing (Html, text, span, code, div, pre)
-import Html.Styled.Attributes exposing (attribute, class, classList, css)
+import Css exposing
+  ( property
+  -- Container
+  , borderRight2, display, margin4, padding4, width
+  -- Sizes
+  , ch, em, px, zero
+  -- Other values
+  , before, inlineBlock, right, solid, textAlign
+  )
+import Html.Styled as Html exposing (Html, Attribute, text, span, code, div, pre)
+import Html.Styled.Attributes exposing (class, css)
 import SyntaxHighlight.Model exposing (..)
 
 
@@ -16,21 +25,29 @@ toBlockHtml theme maybeStart lines =
         List.map (pre [] << lineView theme) lines
 
       Just start ->
-        List.indexedMap (numberedLineView theme start) lines
+        List.indexedMap (numberedLineView theme start (start + List.length lines)) lines
   )
 
 
-numberedLineView : Theme -> Int -> Int -> Line -> Html msg
-numberedLineView theme start index { tokens, highlight } =
+numberedLineView : Theme -> Int -> Int -> Int -> Line -> Html msg
+numberedLineView theme start end index { tokens, maybeHighlight } =
   div
-  [ classList
-      [ ( "elmsh-hl", highlight == Just Selected )
-      , ( "elmsh-add", highlight == Just Addition )
-      , ( "elmsh-del", highlight == Just Deletion )
+  ( css
+    [ before
+      [ property "content" ("\"" ++ (toString (start + index)) ++ "\"")
+      , display inlineBlock, width (ch ((logBase 10 (toFloat end)) + 1.5))
+      , margin4 zero (em 1) zero zero, padding4 zero (em 0.5) zero zero
+      , borderRight2 (px 1) solid
+      , textAlign right
+      , theme.gutter
       ]
-  , attribute "data-elmsh-lc" (toString (start + index)) -- TODO line number using elm-css
-  ]
-  (tokensView theme tokens)
+    ]
+  ::(case maybeHighlight of
+      Nothing -> []
+      Just highlight -> highlightStyleAttributes theme highlight
+    )
+  )
+  ( tokensView theme tokens )
 
 
 toInlineHtml : Theme -> Line -> Html msg
@@ -39,20 +56,22 @@ toInlineHtml theme line =
 
 
 lineView : Theme -> Line -> List (Html msg)
-lineView theme {tokens, highlight} =
-  ( if highlight == Nothing then
-      tokensView theme tokens
-    else
+lineView theme {tokens, maybeHighlight} =
+  case maybeHighlight of
+    Nothing -> tokensView theme tokens
+    Just highlight ->
       [ span
-        [ classList
-            [ ( "elmsh-hl", highlight == Just Selected )
-            , ( "elmsh-add", highlight == Just Addition )
-            , ( "elmsh-del", highlight == Just Deletion )
-            ]
-        ]
+        (highlightStyleAttributes theme highlight)
         (tokensView theme tokens)
       ]
-  )
+
+
+highlightStyleAttributes : Theme -> Highlight -> List (Attribute msg)
+highlightStyleAttributes theme highlight =
+  case highlight of
+    Selection -> [ class "elmsh-sel", css [ theme.selection ] ]
+    Addition -> [ class "elmsh-add", css [ theme.addition ] ]
+    Deletion -> [ class "elmsh-del", css [ theme.deletion ] ]
 
 
 tokensView : Theme -> List Token -> List (Html msg)

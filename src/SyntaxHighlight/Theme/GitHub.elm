@@ -1,6 +1,7 @@
 module SyntaxHighlight.Theme.GitHub exposing (theme)
 
 import Css exposing (rgb)
+import Dict
 import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
 
@@ -28,4 +29,6 @@ theme =
   , functionReference = noStyle
   , field = noStyle
   , annotation = noStyle
+  , other = Dict.empty
+  , gutter = noStyle
   }

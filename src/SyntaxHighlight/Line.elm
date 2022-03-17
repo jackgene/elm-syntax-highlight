@@ -35,6 +35,6 @@ highlightLines maybeHighlight start end lines =
 highlightLinesHelp : Maybe Highlight -> Int -> Int -> Int -> Line -> Line
 highlightLinesHelp maybeHighlight start end index line =
     if index >= start && index < end then
-        { line | highlight = maybeHighlight }
+        { line | maybeHighlight = maybeHighlight }
     else
         line

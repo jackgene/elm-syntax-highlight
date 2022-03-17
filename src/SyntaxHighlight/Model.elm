@@ -1,6 +1,7 @@
 module SyntaxHighlight.Model exposing (..)
 
 import Css exposing (Style)
+import Dict exposing (Dict)
 
 
 type alias Block = List Line
@@ -8,7 +9,7 @@ type alias Block = List Line
 
 type alias Line =
   { tokens : List Token
-  , highlight : Maybe Highlight
+  , maybeHighlight : Maybe Highlight
   , errors : List ErrorSpan
   }
 
@@ -49,7 +50,7 @@ The specific styles will depend on the chosen `Theme`.
 
 -}
 type Highlight
-    = Selected
+    = Selection
     | Addition
     | Deletion
 
@@ -80,4 +81,6 @@ type alias Theme =
   , functionArgument : Style
   , field : Style
   , annotation : Style
+  , other : Dict String Style
+  , gutter : Style
   }

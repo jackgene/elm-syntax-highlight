@@ -1,6 +1,7 @@
 module SyntaxHighlight.Theme.OneDark exposing (theme)
 
 import Css exposing (rgb, rgba)
+import Dict
 import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
 
@@ -45,4 +46,6 @@ theme =
   , functionReference = noStyle
   , field = noStyle
   , annotation = noStyle
+  , other = Dict.empty
+  , gutter = noStyle
   }

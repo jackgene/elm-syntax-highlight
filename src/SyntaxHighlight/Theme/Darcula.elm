@@ -1,6 +1,7 @@
 module SyntaxHighlight.Theme.Darcula exposing (theme)
 
 import Css exposing (Style, rgb)
+import Dict
 import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
 
@@ -31,4 +32,6 @@ theme =
   , functionReference = textColor (rgb 176 157 121)
   , field = textColor (rgb 152 118 170)
   , annotation = textColor (rgb 187 181 41)
+  , other = Dict.empty
+  , gutter = noEmphasis (rgb 96 99 102) (rgb 49 51 53)
   }
