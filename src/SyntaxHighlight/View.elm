@@ -3,7 +3,7 @@ module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 import Css exposing
   ( property
   -- Container
-  , borderRight2, display, margin4, padding4, width
+  , borderRight2, display, margin, margin4, padding4, width
   -- Sizes
   , ch, em, px, zero
   -- Other values
@@ -19,7 +19,7 @@ import SyntaxHighlight.Model exposing (..)
 
 toBlockHtml : Theme -> Maybe Int -> Block -> Html msg
 toBlockHtml theme maybeStart lines =
-  pre [ css [ theme.default ], class "elmsh" ]
+  pre [ css [ margin zero, theme.default ], class "elmsh" ]
   ( case maybeStart of
       Nothing ->
         List.map (pre [] << lineView theme) lines
