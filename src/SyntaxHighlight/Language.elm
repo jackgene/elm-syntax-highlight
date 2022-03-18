@@ -6,11 +6,10 @@ import SyntaxHighlight.Language.TypeScript as TypeScript
 import SyntaxHighlight.Model exposing (..)
 
 
-{-| Parse Javascript syntax.
+{-| Parse TypeScript syntax.
 -}
 typeScript : String -> Result Parser.Error Block
-typeScript =
-  TypeScript.parseTokensReversed >> Result.map reverseAndBreakIntoLines
+typeScript = TypeScript.parseTokensReversed >> Result.map reverseAndBreakIntoLines
 
 
 reverseAndBreakIntoLines : List Token -> Block

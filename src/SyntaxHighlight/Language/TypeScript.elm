@@ -6,6 +6,9 @@ import SyntaxHighlight.Language.Common exposing (Delimiter, isWhitespace, isSpac
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
 
+-- TODO
+
+
 parseTokensReversed : String -> Result Error (List Token)
 parseTokensReversed =
   mainLoop
@@ -40,8 +43,8 @@ keywordParser n =
     classDeclarationLoop
       |> repeat zeroOrMore
       |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
-  else if n == "this" || n == "super" then
-    succeed [ ( FunctionParameter, n ) ]
+  --else if n == "this" || n == "super" then
+  --  succeed [ ( FunctionArgument, n ) ]
   else if n == "constructor" then
     functionDeclarationLoop
       |> repeat zeroOrMore
@@ -79,7 +82,7 @@ argLoop =
   oneOf
     [ whitespaceOrComment
     , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ',' || c == ')'))
-      |> map (\name -> [ ( FunctionParameter, name ) ])
+      |> map (\name -> [ ( FunctionArgument, name ) ])
     , keep oneOrMore (\c -> c == '/' || c == ',')
       |> map (\sep -> [ ( Normal, sep ) ])
     ]
@@ -95,7 +98,7 @@ functionEvalLoop identifier revTokens =
         (\n ->
           succeed
             ((( Normal, "(" ) :: revTokens)
-              ++ [ ( FunctionCall, identifier ) ]
+              ++ [ ( FunctionReference, identifier ) ]
             )
         )
     , succeed (revTokens ++ [ ( Normal, identifier ) ])
@@ -114,7 +117,7 @@ classDeclarationLoop =
               |> repeat zeroOrMore
               |> consThenRevConcat [ ( Keyword, n ) ]
           else
-            succeed [ ( FunctionDeclaration, n ) ]
+            succeed [ ( TypeDeclaration, n ) ]
         )
     ]
 
@@ -124,7 +127,7 @@ classExtendsLoop =
   oneOf
     [ whitespaceOrComment
     , keep oneOrMore isIdentifierNameChar
-      |> map (\name -> [ ( Normal, name ) ])
+      |> map (\name -> [ ( TypeReference, name ) ])
     ]
 
 
@@ -150,42 +153,52 @@ isKeyword str =
 keywordSet : Set String
 keywordSet =
   Set.fromList
+  ( -- JavaScript
     [ "break"
-    , "do"
-    , "instanceof"
-    , "typeof"
     , "case"
-    , "else"
-    , "new"
     , "catch"
-    , "finally"
-    , "return"
-    , "void"
     , "continue"
-    , "for"
-    , "switch"
-    , "while"
     , "debugger"
-    , "this"
-    , "with"
     , "default"
-    , "if"
-    , "throw"
     , "delete"
-    , "in"
-    , "try"
+    , "do"
+    , "else"
     , "enum"
-    , "extends"
     , "export"
-    , "import"
+    , "extends"
+    , "finally"
+    , "for"
+    , "if"
     , "implements"
-    , "private"
-    , "public"
-    , "yield"
+    , "import"
+    , "in"
+    , "instanceof"
     , "interface"
+    , "new"
     , "package"
+    , "private"
     , "protected"
+    , "public"
+    , "return"
+    , "switch"
+    , "this"
+    , "throw"
+    , "try"
+    , "typeof"
+    , "void"
+    , "while"
+    , "with"
+    , "yield"
+    -- TypeScript
+    , "as"
+    , "export"
+    , "from"
+    , "import"
+    , "readonly"
     ]
+  -- TypeScript Built-ins
+  ++[ "bigint", "boolean", "number", "string" ]
+  )
 
 
 isDeclarationKeyword : String -> Bool
