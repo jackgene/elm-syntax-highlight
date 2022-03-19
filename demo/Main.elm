@@ -1,607 +1,402 @@
 module Main exposing (..)
 
-import Css.Global exposing (global)
-import Time exposing (Time)
-import Html.Styled as Html exposing
-  (Html, div, text, textarea, option, select, label, ul, li, input, button)
-import Html.Styled.Attributes as Attributes exposing
-  (defaultValue, class, value, spellcheck, selected, style, type_, checked, classList)
+import Css exposing
+  ( Style, absolute, bottom, em, fontFamily, fontSize, height, left, margin2
+  , overflow, pc, position, rgb, right, sansSerif, scroll, top, width, zero
+  )
 import Dict exposing (Dict)
-import Html.Styled.Events as Events exposing (onClick, onInput, onCheck)
+import Examples exposing (..)
+import Html.Styled as Html exposing
+  ( Attribute, Html
+  , div, fieldset, input, label, legend, option, select, text
+  )
+import Html.Styled.Attributes exposing (checked, css, selected, type_, value)
+import Html.Styled.Events exposing (on, onCheck, targetValue)
+import Http exposing (decodeUri)
 import Json.Decode as Json
-import SyntaxHighlight as SH
+import Navigation exposing (Location)
+import Parser
+import Regex exposing (HowMany(..), regex)
+import Set exposing (Set)
+import SyntaxHighlight.Model exposing (Block, Theme)
+import SyntaxHighlight exposing (toBlockHtml)
+import SyntaxHighlight.Language as Language
 import SyntaxHighlight.Theme as Theme
-
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { init = ( initModel, Cmd.none )
-        , view = view
-        , update = update
-        , subscriptions = always Sub.none
-        }
-
+import SyntaxHighlight.Theme.Common exposing
+  ( bold, noEmphasis, noStyle, textColor )
 
 
 -- Model
+type alias SourceCode =
+  { language : String
+  , text : String
+  , parser : String -> Result Parser.Error Block
+  }
+
+
+type alias NamedTheme =
+  { name : String
+  , definition : Theme
+  }
+
+
+type alias HighlightedToken =
+  { comment : Bool
+  , namespace : Bool
+  , keyword : Bool
+  , declarationKeyword : Bool
+  , operator : Bool
+  , number : Bool
+  , string : Bool
+  , literal : Bool
+  , typeDeclaration : Bool
+  , typeReference : Bool
+  , functionDeclaration : Bool
+  , functionReference : Bool
+  , functionArgument : Bool
+  , field : Bool
+  , annotation : Bool
+  }
 
 
 type alias Model =
-    { scroll : Scroll
-    , currentLanguage : String
-    , languagesModel : Dict String LanguageModel
-    , showLineCount : Bool
-    , lineCountStart : Int
-    , lineCount : Maybe Int
-    , theme : String
-    , customTheme : String
-    , highlight : HighlightModel
-    }
-
-
-initModel : Model
-initModel =
-    { scroll = Scroll 0 0
-    , currentLanguage = "Elm"
-    , languagesModel = initLanguagesModel
-    , showLineCount = True
-    , lineCountStart = 1
-    , lineCount = Just 1
-    , theme = "Darcula"
-    , customTheme = "/* CSS */"
-    , highlight = HighlightModel (Just SH.Add) 1 3
-    }
-
-
-type alias Scroll =
-    { top : Int
-    , left : Int
-    }
-
-
-type alias LanguageModel =
-    { code : String
-    , scroll : Scroll
-    , highlight : HighlightModel
-    }
-
-
-initLanguagesModel : Dict String LanguageModel
-initLanguagesModel =
-    Dict.fromList
-        [ ( "Elm", initLanguageModel elmExample )
-        , ( "Xml", initLanguageModel xmlExample )
-        , ( "Javascript", initLanguageModel javascriptExample )
-        , ( "Css", initLanguageModel cssExample )
-        , ( "Python", initLanguageModel pythonExample )
-        ]
-
-
-initLanguageModel : String -> LanguageModel
-initLanguageModel codeStr =
-    { code = codeStr
-    , scroll = Scroll 0 0
-    , highlight = initHighlightModel
-    }
-
-
-type alias HighlightModel =
-    { mode : Maybe SH.Highlight
-    , start : Int
-    , end : Int
-    }
-
-
-initHighlightModel : HighlightModel
-initHighlightModel =
-    { mode = Nothing
-    , start = 0
-    , end = 0
-    }
-
-
-elmExample : String
-elmExample =
-    """module Main exposing (..)
-
-import Html exposing (Html, text)
-
--- Main function
-
-main : Html a
-main =
-    text "Hello, World!"
-"""
-
-
-javascriptExample : String
-javascriptExample =
-    """var iceCream = 'chocolate';
-if (iceCream === 'chocolate') {
-  alert(`Yay, I love ${iceCream} ice cream!`);
-} else {
-  alert('Awwww, but chocolate is my favorite...');
-}
-
-class Polygon {
-  constructor(height, width) {
-    this.name = 'Polygon';
-    this.height = height;
-    this.width = width;
+  { sourceCode : SourceCode
+  , sourceCodesByLanguage : Dict String SourceCode
+  , firstLine : Maybe Int
+  , theme : NamedTheme
+  , highlightedToken : HighlightedToken
   }
-}
-
-// Multiply two numbers
-
-function multiply(num1,num2) {
-  var result = num1 * num2;
-  return result;
-}
-
-"""
 
 
-xmlExample : String
-xmlExample =
-    """<html>
-<head>
-    <title>Elm Syntax Highlight</title>
-</head>
-<body id="main">
-    <p class="hero">Hello World</p>
-</body>
-</html>
-"""
+-- Constants
+highlightTokensThemeName : String
+highlightTokensThemeName = "Highlight Tokens"
 
 
-cssExample : String
-cssExample =
-    """stock::before {
-  display: block;
-  content: "To scale, the lengths of materials in stock are:";
-}
-stock > * {
-  display: block;
-  width: attr(length em); /* default 0 */
-  height: 1em;
-  border: solid thin;
-  margin: 0.5em;
-}
-.wood {
-  background: orange url(wood.png);
-}
-.metal {
-  background: #c0c0c0 url(metal.png);
-}
-"""
+darcula : NamedTheme
+darcula = NamedTheme "Darcula" Theme.darcula
 
 
-pythonExample : String
-pythonExample =
-    """ice_cream = 'chocolate'
-if ice_cream == 'chocolate':
-    print('Yay, I love chocolate ice cream!')
-else:
-    print('Awwww, but chocolate is my favorite...');
+themesByName : Dict String NamedTheme
+themesByName =
+  Dict.fromList
+  ( List.map
+    ( \theme -> (theme.name, theme) )
+    [ darcula
+    , NamedTheme "GitHub" Theme.gitHub
+    , NamedTheme "Monokai" Theme.monokai
+    , NamedTheme "OneDark" Theme.oneDark
+    ]
+  )
 
-# Multiply two numbers
-def multiply(a, b):
-    return a * b
 
-class Animal:
-    def __init__(self):
-        pass
+defaultTypeScriptSourceCode : SourceCode
+defaultTypeScriptSourceCode =
+  SourceCode "TypeScript" typeScriptExample Language.typeScript
 
-class Dog(Animal):
-    kind = 'canine'
 
-    def __init__(self, name):
-        self.name = name
+-- Common
+themeByName : HighlightedToken -> String -> Maybe NamedTheme
+themeByName highlightedToken name =
+  if name /= highlightTokensThemeName then Dict.get name themesByName
+  else
+    Just
+    ( NamedTheme highlightTokensThemeName
+      ( tokenHighlightingTheme highlightedToken )
+    )
 
-d = Dog('Fido')
-"""
 
+
+-- Init
+init : Location -> (Model, Cmd Msg)
+init location =
+  let
+    hashParams : Dict String String
+    hashParams =
+      Dict.fromList
+      ( List.filterMap
+        ( \eqDelimKeyVal ->
+          case Regex.split (AtMost 2) (regex "=") eqDelimKeyVal of
+            key :: uriEncodedValue :: _ ->
+              Maybe.map
+              ( \value -> (key, value) )
+              ( decodeUri uriEncodedValue )
+            _ -> Nothing
+        )
+        ( String.split "&" (String.dropLeft 1 location.hash) )
+      )
+
+    tokens : Set String
+    tokens =
+      Maybe.withDefault Set.empty
+      ( Maybe.map
+        ( Set.fromList << String.split "|" )
+        ( Dict.get "tokens" hashParams )
+      )
+
+    highlightedToken : HighlightedToken
+    highlightedToken =
+      { comment = Set.member "comm" tokens
+      , namespace = Set.member "ns" tokens
+      , keyword = Set.member "kw" tokens
+      , declarationKeyword = Set.member "dkw" tokens
+      , operator = Set.member "op" tokens
+      , number = Set.member "num" tokens
+      , string = Set.member "str" tokens
+      , literal = Set.member "lit" tokens
+      , typeDeclaration = Set.member "typd" tokens
+      , typeReference = Set.member "typ" tokens
+      , functionDeclaration = Set.member "fncd" tokens
+      , functionReference = Set.member "fnc" tokens
+      , functionArgument = Set.member "arg" tokens
+      , field = Set.member "fld" tokens
+      , annotation = Set.member "ann" tokens
+      }
+
+    theme : NamedTheme
+    theme =
+      Maybe.withDefault darcula
+      ( Maybe.andThen
+        ( themeByName highlightedToken )
+        ( Dict.get "theme" hashParams )
+      )
+  in
+  ( { sourceCode = defaultTypeScriptSourceCode
+    , sourceCodesByLanguage =
+      Dict.fromList
+      ( List.map
+        ( \code -> (code.language, code) )
+        [ SourceCode "CSS" cssExample Language.typeScript
+        , SourceCode "Elm" elmExample Language.typeScript
+        , SourceCode "Python" pythonExample Language.typeScript
+        , defaultTypeScriptSourceCode
+        , SourceCode "XML" xmlExample Language.typeScript
+        ]
+      )
+    , firstLine = Just 1
+    , theme = theme
+    , highlightedToken = highlightedToken
+    }
+  , Cmd.none
+  )
 
 
 -- Update
-
-
 type Msg
-    = NoOp
-    | SetText String String
-    | OnScroll Scroll
-    | Frame Time
-    | SetLanguage String
-    | ShowLineCount Bool
-    | SetLineCountStart Int
-    | SetColorScheme String
-    | SetCustomColorScheme String
-    | SetHighlightMode (Maybe SH.Highlight)
-    | SetHighlightStart Int
-    | SetHighlightEnd Int
-    | ApplyHighlight
+  = NoOp
+  | ThemeByName String
+  | TokenHighlightingState (HighlightedToken -> Bool -> HighlightedToken) Bool
+
+
+tokenHighlightingTheme : HighlightedToken -> Theme
+tokenHighlightingTheme token =
+  let
+    highlight : Style
+    highlight = bold (textColor (rgb 128 0 0))
+  in
+  { default = noEmphasis (rgb 144 144 144) (rgb 240 240 240)
+  , selection = noStyle
+  , addition = noStyle
+  , deletion = noStyle
+  , comment = if token.comment then highlight else noStyle
+  , namespace = if token.namespace then highlight else noStyle
+  , keyword = if token.keyword then highlight else noStyle
+  , declarationKeyword = if token.declarationKeyword then highlight else noStyle
+  , operator = if token.operator then highlight else noStyle
+  , number = if token.number then highlight else noStyle
+  , string = if token.string then highlight else noStyle
+  , literal = if token.literal then highlight else noStyle
+  , typeDeclaration = if token.typeDeclaration then highlight else noStyle
+  , typeReference = if token.typeReference then highlight else noStyle
+  , functionDeclaration = if token.functionDeclaration then highlight else noStyle
+  , functionArgument = if token.functionArgument then highlight else noStyle
+  , functionReference = if token.functionReference then highlight else noStyle
+  , field = if token.field then highlight else noStyle
+  , annotation = if token.annotation then highlight else noStyle
+  , other = Dict.empty
+  , gutter = noEmphasis (rgb 120 120 120) (rgb 224 224 224)
+  }
+
+
+hash : String -> HighlightedToken -> String
+hash themeName tokens =
+  "#theme=" ++ themeName ++
+  ( if themeName /= highlightTokensThemeName then ""
+    else
+      "&tokens=" ++
+      ( String.join "|"
+        ( ( if tokens.comment then [ "comm" ] else [] )
+        ++( if tokens.namespace then [ "ns" ] else [] )
+        ++( if tokens.keyword then [ "kw" ] else [] )
+        ++( if tokens.declarationKeyword then [ "dkw" ] else [] )
+        ++( if tokens.operator then [ "op" ] else [] )
+        ++( if tokens.number then [ "num" ] else [] )
+        ++( if tokens.string then [ "str" ] else [] )
+        ++( if tokens.literal then [ "lit" ] else [] )
+        ++( if tokens.typeDeclaration then [ "typd" ] else [] )
+        ++( if tokens.typeReference then [ "typ" ] else [] )
+        ++( if tokens.functionDeclaration then [ "fncd" ] else [] )
+        ++( if tokens.functionReference then [ "fnc" ] else [] )
+        ++( if tokens.functionArgument then [ "arg" ] else [] )
+        ++( if tokens.field then [ "fld" ] else [] )
+        ++( if tokens.annotation then [ "ann" ] else [] )
+        )
+      )
+  )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ highlight } as model) =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none )
+update msg model =
+  case msg of
+    ThemeByName name ->
+      ( { model
+        | theme = Maybe.withDefault model.theme (themeByName model.highlightedToken name)
+        }
+      , Navigation.newUrl (hash name model.highlightedToken)
+      )
 
-        SetText lang codeStr ->
-            getLangModel lang model
-                |> (\m -> { m | code = codeStr })
-                |> updateLangModel lang model
-                |> flip (,) Cmd.none
+    TokenHighlightingState updateHighlightedToken highlight ->
+      let
+        currentTheme : NamedTheme
+        currentTheme = model.theme
 
-        OnScroll scroll ->
-            ( getLangModel model.currentLanguage model
-                |> (\m -> { m | scroll = scroll })
-                |> updateLangModel model.currentLanguage { model | scroll = scroll }
-            , Cmd.none
-            )
+        newHighlightedToken : HighlightedToken
+        newHighlightedToken = updateHighlightedToken model.highlightedToken highlight
+      in
+      ( { model
+        | highlightedToken = newHighlightedToken
+        , theme =
+          { currentTheme
+          | definition = tokenHighlightingTheme newHighlightedToken
+          }
+        }
+      , Navigation.newUrl (hash currentTheme.name newHighlightedToken)
+      )
 
-        Frame _ ->
-            getLangModel model.currentLanguage model
-                |> (\m -> { m | scroll = model.scroll })
-                |> updateLangModel model.currentLanguage model
-                |> flip (,) Cmd.none
-
-        SetLanguage lang ->
-            getLangModel lang model
-                |> (\m -> { m | scroll = Scroll 0 0 })
-                |> updateLangModel lang model
-                |> (\m ->
-                        { m
-                            | scroll = Scroll 0 0
-                            , currentLanguage = lang
-                        }
-                   )
-                |> flip (,) Cmd.none
-
-        ShowLineCount bool ->
-            ( { model
-                | showLineCount = bool
-                , lineCount =
-                    if bool then
-                        Just model.lineCountStart
-                    else
-                        Nothing
-              }
-            , Cmd.none
-            )
-
-        SetLineCountStart start ->
-            ( { model
-                | lineCountStart = start
-                , lineCount = Just start
-              }
-            , Cmd.none
-            )
-
-        SetColorScheme cs ->
-            ( { model | theme = cs }
-            , Cmd.none
-            )
-
-        SetCustomColorScheme ccs ->
-            ( { model | customTheme = ccs }
-            , Cmd.none
-            )
-
-        SetHighlightMode mode ->
-            ( { model | highlight = { highlight | mode = mode } }
-            , Cmd.none
-            )
-
-        SetHighlightStart int ->
-            ( { model | highlight = { highlight | start = int } }
-            , Cmd.none
-            )
-
-        SetHighlightEnd int ->
-            ( { model | highlight = { highlight | end = int } }
-            , Cmd.none
-            )
-
-        ApplyHighlight ->
-            getLangModel model.currentLanguage model
-                |> (\m -> { m | highlight = model.highlight })
-                |> updateLangModel model.currentLanguage model
-                |> flip (,) Cmd.none
-
-
-getLangModel : String -> Model -> LanguageModel
-getLangModel lang model =
-    Dict.get lang model.languagesModel
-        |> Maybe.withDefault (initLanguageModel elmExample)
-
-
-updateLangModel : String -> Model -> LanguageModel -> Model
-updateLangModel lang model langModel =
-    Dict.insert lang langModel model.languagesModel
-        |> \n -> { model | languagesModel = n }
-
+    NoOp -> (model, Cmd.none)
 
 
 -- View
+onChange : (String -> msg) -> Attribute msg
+onChange tagger = on "change" (Json.map tagger targetValue)
+
+
+optionsView : String -> List String -> List (Html Msg)
+optionsView current =
+  List.map
+  ( \item ->
+    option
+    [ selected (current == item), value item ]
+    [ text item ]
+  )
+
+
+--numberInput : String -> Int -> (Int -> Msg) -> Html Msg
+--numberInput labelText defaultVal msg =
+--  label []
+--  [ text labelText
+--  , input
+--    [ type_ "number"
+--    , onInput (String.toInt >> Result.withDefault 0 >> msg)
+--    , defaultValue (toString defaultVal)
+--    ]
+--    []
+--  ]
+
+
+highlightTokenFormFieldView : String -> Bool -> (HighlightedToken -> Bool -> HighlightedToken) -> Html Msg
+highlightTokenFormFieldView tokenName currentChecked updateHighlightedToken =
+  div []
+  [ label []
+    [ input
+      [ type_ "checkbox"
+      , checked currentChecked
+      , onCheck (TokenHighlightingState updateHighlightedToken)
+      ]
+      []
+    , text tokenName
+    ]
+  ]
+
+
+highlightTokenFormView : HighlightedToken -> Html Msg
+highlightTokenFormView tokens =
+  fieldset [ css [ margin2 (em 0.5) zero ] ]
+  [ legend [] [ text "Tokens to Highlight" ]
+  , highlightTokenFormFieldView "Comment" tokens.comment
+    ( \tokens value -> { tokens | comment = value } )
+  , highlightTokenFormFieldView "Namespace" tokens.namespace
+    ( \tokens value -> { tokens | namespace = value } )
+  , highlightTokenFormFieldView "Keyword" tokens.keyword
+    ( \tokens value -> { tokens | keyword = value } )
+  , highlightTokenFormFieldView "Declaration Keyword" tokens.declarationKeyword
+    ( \tokens value -> { tokens | declarationKeyword = value } )
+  , highlightTokenFormFieldView "Operator" tokens.operator
+    ( \tokens value -> { tokens | operator = value } )
+  , highlightTokenFormFieldView "Number" tokens.number
+    ( \tokens value -> { tokens | number = value } )
+  , highlightTokenFormFieldView "String" tokens.string
+    ( \tokens value -> { tokens | string = value } )
+  , highlightTokenFormFieldView "Literal" tokens.literal
+    ( \tokens value -> { tokens | literal = value } )
+  , highlightTokenFormFieldView "Type Declaration" tokens.typeDeclaration
+    ( \tokens value -> { tokens | typeDeclaration = value } )
+  , highlightTokenFormFieldView "Type Reference" tokens.typeReference
+    ( \tokens value -> { tokens | typeReference = value } )
+  , highlightTokenFormFieldView "Function Declaration" tokens.functionDeclaration
+    ( \tokens value -> { tokens | functionDeclaration = value } )
+  , highlightTokenFormFieldView "Function Reference" tokens.functionReference
+    ( \tokens value -> { tokens | functionReference = value } )
+  , highlightTokenFormFieldView "Function Argument" tokens.functionArgument
+    ( \tokens value -> { tokens | functionArgument = value } )
+  , highlightTokenFormFieldView "Field" tokens.field
+    ( \tokens value -> { tokens | field = value } )
+  , highlightTokenFormFieldView "Annotation" tokens.annotation
+    ( \tokens value -> { tokens | annotation = value } )
+  ]
 
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ Html.node "style" [] [ text (textareaStyle model) ]
-        , syntaxTheme model.theme model.customTheme
-        , viewLanguage "Elm" toHtmlElm model
-        , viewLanguage "Javascript" toHtmlJavascript model
-        , viewLanguage "Xml" toHtmlXml model
-        , viewLanguage "Css" toHtmlCss model
-        , viewLanguage "Python" toHtmlPython model
-        , viewOptions model
-        ]
-
-
-textareaStyle : Model -> String
-textareaStyle { theme } =
-    let
-        style a b =
-            String.join "\n"
-                [ ".textarea {caret-color: " ++ a ++ ";}"
-                , ".textarea::selection { background-color: " ++ b ++ "; }"
-                ]
-    in
-        if List.member theme [ "Monokai", "One Dark", "Custom" ] then
-            style "#f8f8f2" "rgba(255,255,255,0.2)"
-        else
-            style "#24292e" "rgba(0,0,0,0.2)"
-
-
-syntaxTheme : String -> String -> Html msg
-syntaxTheme currentTheme customTheme =
-    Dict.fromList Theme.all
-        |> Dict.get currentTheme
-        |> Maybe.map global
-        |> Maybe.withDefault (Html.node "style" [] [ text customTheme ])
-
-
-viewLanguage : String -> (Maybe Int -> String -> HighlightModel -> Html Msg) -> Model -> Html Msg
-viewLanguage thisLang parser ({ currentLanguage, lineCount } as model) =
-    if thisLang /= currentLanguage then
-        div [] []
-    else
-        let
-            langModel =
-                getLangModel thisLang model
-        in
-            div
-                [ classList
-                    [ ( "container", True )
-                    , ( "elmsh", True )
-                    ]
-                ]
-                [ div
-                    [ class "view-container"
-                    , style
-                        [ ( "transform"
-                          , "translate("
-                                ++ toString -langModel.scroll.left
-                                ++ "px, "
-                                ++ toString -langModel.scroll.top
-                                ++ "px)"
-                          )
-                        , ( "will-change", "transform" )
-                        ]
-                    ]
-                    [ parser
-                        lineCount
-                        langModel.code
-                        langModel.highlight
-                    ]
-                , viewTextarea thisLang langModel.code model
-                ]
-
-
-viewTextarea : String -> String -> Model -> Html Msg
-viewTextarea thisLang codeStr { showLineCount } =
-    textarea
-        [ defaultValue codeStr
-        , classList
-            [ ( "textarea", True )
-            , ( "textarea-lc", showLineCount )
-            ]
-        , onInput (SetText thisLang)
-        , spellcheck False
-        , Events.on "scroll"
-            (Json.map2 Scroll
-                (Json.at [ "target", "scrollTop" ] Json.int)
-                (Json.at [ "target", "scrollLeft" ] Json.int)
-                |> Json.map OnScroll
-            )
-        ]
-        []
-
-
-
--- Helpers function for Html.Lazy.lazy
-
-
-toHtmlElm : Maybe Int -> String -> HighlightModel -> Html Msg
-toHtmlElm =
-    toHtml SH.elm
-
-
-toHtmlXml : Maybe Int -> String -> HighlightModel -> Html Msg
-toHtmlXml =
-    toHtml SH.xml
-
-
-toHtmlJavascript : Maybe Int -> String -> HighlightModel -> Html Msg
-toHtmlJavascript =
-    toHtml SH.javascript
-
-
-toHtmlCss : Maybe Int -> String -> HighlightModel -> Html Msg
-toHtmlCss =
-    toHtml SH.css
-
-
-toHtmlPython : Maybe Int -> String -> HighlightModel -> Html Msg
-toHtmlPython =
-    toHtml SH.python
-
-
-toHtml : (String -> Result x SH.HCode) -> Maybe Int -> String -> HighlightModel -> Html Msg
-toHtml parser maybeStart str hlModel =
-    parser str
-        |> Result.map (SH.highlightLines hlModel.mode hlModel.start hlModel.end)
-        |> Result.map (SH.toBlockHtml maybeStart)
-        |> Result.mapError (\x -> text (toString x))
-        |> (\result ->
-                case result of
-                    Result.Ok a ->
-                        a
-
-                    Result.Err x ->
-                        x
-           )
-
-
-
--- Options
-
-
-viewSelectOptions : String -> List String -> List (Html Msg)
-viewSelectOptions current =
-    List.map
-        (\name_ ->
-            option
-                [ selected (current == name_), value name_ ]
-                [ text name_ ]
+  div [ css [ fontFamily sansSerif ] ]
+  [ div
+    [ css
+      [ position absolute
+      , top (pc 1), width (pc 16), height (pc 1), left (pc 1)
+      ]
+    ]
+    ( label []
+      [ text "Theme: "
+      , select [ onChange ThemeByName ]
+        (optionsView model.theme.name ((Dict.keys themesByName) ++ [ highlightTokensThemeName ]))
+      ]
+    ::( if model.theme.name /= highlightTokensThemeName then []
+        else [ highlightTokenFormView model.highlightedToken ]
+      )
+    )
+  , div
+    [ css
+      [ position absolute
+      , top (pc 1), right (pc 1), bottom (pc 1), left (pc 18)
+      , overflow scroll
+      , fontSize (em 1.2)
+      ]
+    ]
+    [ ( Result.withDefault (text "Error")
+        ( Result.map
+          ( toBlockHtml model.theme.definition (Just 1) )
+          ( model.sourceCode.parser model.sourceCode.text )
         )
+      )
+    ]
+  ]
 
 
-viewOptions : Model -> Html Msg
-viewOptions ({ currentLanguage, showLineCount, lineCountStart, theme } as model) =
-    ul []
-        [ li []
-            [ label []
-                [ input
-                    [ type_ "checkbox"
-                    , checked showLineCount
-                    , onCheck ShowLineCount
-                    ]
-                    []
-                , text "Show Line Count"
-                ]
-            , if showLineCount then
-                numberInput " - Start: " lineCountStart SetLineCountStart
-              else
-                text ""
-            ]
-        , li []
-            [ label []
-                [ text "Language: "
-                , select
-                    [ Json.at [ "target", "value" ] Json.string
-                        |> Json.map SetLanguage
-                        |> Events.on "change"
-                    ]
-                  <|
-                    viewSelectOptions
-                        model.currentLanguage
-                        (Dict.keys model.languagesModel)
-                ]
-            ]
-        , li []
-            [ label []
-                [ text "Color Scheme: "
-                , select
-                    [ Events.on "change"
-                        (Json.map SetColorScheme (Json.at [ "target", "value" ] Json.string))
-                    ]
-                  <|
-                    viewSelectOptions
-                        model.theme
-                        ((List.map Tuple.first Theme.all)
-                            ++ [ "Custom" ]
-                        )
-                ]
-            ]
-        , if theme == "Custom" then
-            customTheme model
-          else
-            text ""
-        , li []
-            [ text "Highlight Lines"
-            , viewHighlightOptions model.highlight
-            ]
-        ]
-
-
-customTheme : Model -> Html Msg
-customTheme model =
-    textarea
-        [ defaultValue model.customTheme
-        , onInput SetCustomColorScheme
-        , spellcheck False
-        , style [ ( "width", "100%" ) ]
-        , Attributes.rows 10
-        ]
-        []
-
-
-viewHighlightOptions : HighlightModel -> Html Msg
-viewHighlightOptions { mode, start, end } =
-    ul []
-        [ li []
-            [ label []
-                [ text "Type: "
-                , select
-                    [ Json.at [ "target", "value" ] Json.string
-                        |> Json.map toHighlightMode
-                        |> Json.map SetHighlightMode
-                        |> Events.on "change"
-                    ]
-                    [ option [ selected (mode == Nothing) ] [ text "No highlight" ]
-                    , option [ selected (mode == Just SH.Highlight) ] [ text "Highlight" ]
-                    , option [ selected (mode == Just SH.Add) ] [ text "Addition" ]
-                    , option [ selected (mode == Just SH.Del) ] [ text "Deletion" ]
-                    ]
-                ]
-            ]
-        , li [] [ numberInput "Start: " start SetHighlightStart ]
-        , li [] [ numberInput "End: " end SetHighlightEnd ]
-        , li [] [ button [ onClick ApplyHighlight ] [ text "Highlight" ] ]
-        ]
-
-
-toHighlightMode : String -> Maybe SH.Highlight
-toHighlightMode str =
-    case str of
-        "Highlight" ->
-            Just SH.Highlight
-
-        "Addition" ->
-            Just SH.Add
-
-        "Deletion" ->
-            Just SH.Del
-
-        _ ->
-            Nothing
-
-
-numberInput : String -> Int -> (Int -> Msg) -> Html Msg
-numberInput labelStr defaultVal msg =
-    label []
-        [ text labelStr
-        , input
-            [ type_ "number"
-            , Attributes.min "-999"
-            , Attributes.max "999"
-            , onInput (String.toInt >> Result.withDefault 0 >> msg)
-            , defaultValue (toString defaultVal)
-            ]
-            []
-        ]
+main : Program Never Model Msg
+main =
+  Navigation.program (always NoOp)
+  { init = init
+  , update = update
+  , subscriptions = always Sub.none
+  , view = Html.toUnstyled << view
+  }
