@@ -69,7 +69,7 @@ useTheme theme =
     , ( "elmsh-fncd", theme.functionDeclaration )
     , ( "elmsh-fnc", theme.functionReference )
     , ( "elmsh-arg", theme.functionArgument )
-    , ( "elmsh-fld", theme.field )
+    , ( "elmsh-fld", theme.fieldReference )
     , ( "elmsh-ann", theme.annotation )
     ]
   )

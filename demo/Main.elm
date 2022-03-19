@@ -45,6 +45,7 @@ type alias HighlightedToken =
   , namespace : Bool
   , keyword : Bool
   , declarationKeyword : Bool
+  , builtIn : Bool
   , operator : Bool
   , number : Bool
   , string : Bool
@@ -54,7 +55,8 @@ type alias HighlightedToken =
   , functionDeclaration : Bool
   , functionReference : Bool
   , functionArgument : Bool
-  , field : Bool
+  , fieldDeclaration : Bool
+  , fieldReference : Bool
   , annotation : Bool
   }
 
@@ -140,6 +142,7 @@ init location =
       , namespace = Set.member "ns" tokens
       , keyword = Set.member "kw" tokens
       , declarationKeyword = Set.member "dkw" tokens
+      , builtIn = Set.member "bltn" tokens
       , operator = Set.member "op" tokens
       , number = Set.member "num" tokens
       , string = Set.member "str" tokens
@@ -149,7 +152,8 @@ init location =
       , functionDeclaration = Set.member "fncd" tokens
       , functionReference = Set.member "fnc" tokens
       , functionArgument = Set.member "arg" tokens
-      , field = Set.member "fld" tokens
+      , fieldDeclaration = Set.member "fldd" tokens
+      , fieldReference = Set.member "fld" tokens
       , annotation = Set.member "ann" tokens
       }
 
@@ -202,6 +206,7 @@ tokenHighlightingTheme token =
   , namespace = if token.namespace then highlight else noStyle
   , keyword = if token.keyword then highlight else noStyle
   , declarationKeyword = if token.declarationKeyword then highlight else noStyle
+  , builtIn = if token.builtIn then highlight else noStyle
   , operator = if token.operator then highlight else noStyle
   , number = if token.number then highlight else noStyle
   , string = if token.string then highlight else noStyle
@@ -211,7 +216,8 @@ tokenHighlightingTheme token =
   , functionDeclaration = if token.functionDeclaration then highlight else noStyle
   , functionArgument = if token.functionArgument then highlight else noStyle
   , functionReference = if token.functionReference then highlight else noStyle
-  , field = if token.field then highlight else noStyle
+  , fieldDeclaration = if token.fieldDeclaration then highlight else noStyle
+  , fieldReference = if token.fieldReference then highlight else noStyle
   , annotation = if token.annotation then highlight else noStyle
   , other = Dict.empty
   , gutter = noEmphasis (rgb 120 120 120) (rgb 224 224 224)
@@ -229,6 +235,7 @@ hash themeName tokens =
         ++( if tokens.namespace then [ "ns" ] else [] )
         ++( if tokens.keyword then [ "kw" ] else [] )
         ++( if tokens.declarationKeyword then [ "dkw" ] else [] )
+        ++( if tokens.builtIn then [ "bltn" ] else [] )
         ++( if tokens.operator then [ "op" ] else [] )
         ++( if tokens.number then [ "num" ] else [] )
         ++( if tokens.string then [ "str" ] else [] )
@@ -238,7 +245,8 @@ hash themeName tokens =
         ++( if tokens.functionDeclaration then [ "fncd" ] else [] )
         ++( if tokens.functionReference then [ "fnc" ] else [] )
         ++( if tokens.functionArgument then [ "arg" ] else [] )
-        ++( if tokens.field then [ "fld" ] else [] )
+        ++( if tokens.fieldDeclaration then [ "fldd" ] else [] )
+        ++( if tokens.fieldReference then [ "fld" ] else [] )
         ++( if tokens.annotation then [ "ann" ] else [] )
         )
       )
@@ -331,6 +339,8 @@ highlightTokenFormView tokens =
     ( \tokens value -> { tokens | keyword = value } )
   , highlightTokenFormFieldView "Declaration Keyword" tokens.declarationKeyword
     ( \tokens value -> { tokens | declarationKeyword = value } )
+  , highlightTokenFormFieldView "Built-In" tokens.builtIn
+    ( \tokens value -> { tokens | builtIn = value } )
   , highlightTokenFormFieldView "Operator" tokens.operator
     ( \tokens value -> { tokens | operator = value } )
   , highlightTokenFormFieldView "Number" tokens.number
@@ -349,8 +359,10 @@ highlightTokenFormView tokens =
     ( \tokens value -> { tokens | functionReference = value } )
   , highlightTokenFormFieldView "Function Argument" tokens.functionArgument
     ( \tokens value -> { tokens | functionArgument = value } )
-  , highlightTokenFormFieldView "Field" tokens.field
-    ( \tokens value -> { tokens | field = value } )
+  , highlightTokenFormFieldView "Field Declaration" tokens.fieldDeclaration
+    ( \tokens value -> { tokens | fieldDeclaration = value } )
+  , highlightTokenFormFieldView "Field Reference" tokens.fieldReference
+    ( \tokens value -> { tokens | fieldReference = value } )
   , highlightTokenFormFieldView "Annotation" tokens.annotation
     ( \tokens value -> { tokens | annotation = value } )
   ]

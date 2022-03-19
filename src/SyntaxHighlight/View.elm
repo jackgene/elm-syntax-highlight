@@ -89,6 +89,7 @@ tokenView theme (tokenType, text) =
           Comment -> theme.comment
           Keyword -> theme.keyword
           DeclarationKeyword -> theme.declarationKeyword
+          BuiltIn -> theme.builtIn
           Operator -> theme.operator
           LiteralNumber -> theme.number
           LiteralString -> theme.string
@@ -98,7 +99,8 @@ tokenView theme (tokenType, text) =
           FunctionDeclaration -> theme.functionDeclaration
           FunctionReference -> theme.functionReference
           FunctionArgument -> theme.functionArgument
-          FieldName -> theme.field
+          FieldDeclaration -> theme.fieldDeclaration
+          FieldReference -> theme.fieldReference
           Annotation -> theme.annotation
           _ -> theme.default
       ]
@@ -113,8 +115,10 @@ classByTokenType tokenType =
   ( case tokenType of
       Normal -> ""
       Comment -> "-comm"
+      Namespace -> "-ns"
       Keyword -> "-kw"
       DeclarationKeyword -> "-dkw"
+      BuiltIn -> "-bltn"
       Operator -> "-op"
       LiteralNumber -> "-num"
       LiteralString -> "-str"
@@ -124,7 +128,8 @@ classByTokenType tokenType =
       FunctionDeclaration -> "-fncd"
       FunctionReference -> "-fnc"
       FunctionArgument -> "-arg"
-      FieldName -> "-fld"
+      FieldDeclaration -> "-fldd"
+      FieldReference -> "-fld"
       Annotation -> "-ann"
       _ -> ""
   )

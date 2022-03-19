@@ -23,8 +23,10 @@ type TokenType
   | Comment
   | LineBreak
   -- Programming Language
+  | Namespace
   | Keyword
   | DeclarationKeyword -- For backward compatibility
+  | BuiltIn
   | Operator
   | LiteralNumber
   | LiteralString
@@ -34,7 +36,8 @@ type TokenType
   | FunctionDeclaration
   | FunctionReference
   | FunctionArgument
-  | FieldName
+  | FieldDeclaration
+  | FieldReference
   | Annotation
   -- Miscellaneous
   | Other String
@@ -70,6 +73,7 @@ type alias Theme =
   , namespace : Style
   , keyword : Style
   , declarationKeyword : Style
+  , builtIn : Style
   , operator : Style
   , number : Style
   , string : Style
@@ -79,7 +83,8 @@ type alias Theme =
   , functionDeclaration : Style
   , functionReference : Style
   , functionArgument : Style
-  , field : Style
+  , fieldDeclaration : Style
+  , fieldReference : Style
   , annotation : Style
   , other : Dict String Style
   , gutter : Style
