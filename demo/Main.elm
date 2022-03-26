@@ -108,10 +108,8 @@ themeByName highlightedToken name =
     )
 
 
-
--- Init
-init : Location -> (Model, Cmd Msg)
-init location =
+applyHashState : String -> Model -> Model
+applyHashState hash model =
   let
     hashParams : Dict String String
     hashParams =
@@ -125,7 +123,7 @@ init location =
               ( decodeUri uriEncodedValue )
             _ -> Nothing
         )
-        ( String.split "&" (String.dropLeft 1 location.hash) )
+        ( String.split "&" (String.dropLeft 1 hash) )
       )
 
     tokens : Set String
@@ -165,7 +163,21 @@ init location =
         ( Dict.get "theme" hashParams )
       )
   in
-  ( { sourceCode = defaultTypeScriptSourceCode
+  { model | theme = theme, highlightedToken = highlightedToken }
+
+
+-- Init
+emptyHighlightedToken : HighlightedToken
+emptyHighlightedToken =
+  HighlightedToken
+  False False False False False False False False False
+  False False False False False False False False
+
+
+init : Location -> (Model, Cmd Msg)
+init location =
+  ( applyHashState location.hash
+    { sourceCode = defaultTypeScriptSourceCode
     , sourceCodesByLanguage =
       Dict.fromList
       ( List.map
@@ -178,8 +190,8 @@ init location =
         ]
       )
     , firstLine = Just 1
-    , theme = theme
-    , highlightedToken = highlightedToken
+    , theme = darcula
+    , highlightedToken = emptyHighlightedToken
     }
   , Cmd.none
   )
@@ -187,7 +199,7 @@ init location =
 
 -- Update
 type Msg
-  = NoOp
+  = NewLocation Location
   | ThemeByName String
   | TokenHighlightingState (HighlightedToken -> Bool -> HighlightedToken) Bool
 
@@ -224,8 +236,8 @@ tokenHighlightingTheme token =
   }
 
 
-hash : String -> HighlightedToken -> String
-hash themeName tokens =
+hashOf : String -> HighlightedToken -> String
+hashOf themeName tokens =
   "#theme=" ++ themeName ++
   ( if themeName /= highlightTokensThemeName then ""
     else
@@ -260,7 +272,7 @@ update msg model =
       ( { model
         | theme = Maybe.withDefault model.theme (themeByName model.highlightedToken name)
         }
-      , Navigation.newUrl (hash name model.highlightedToken)
+      , Navigation.newUrl (hashOf name model.highlightedToken)
       )
 
     TokenHighlightingState updateHighlightedToken highlight ->
@@ -278,10 +290,13 @@ update msg model =
           | definition = tokenHighlightingTheme newHighlightedToken
           }
         }
-      , Navigation.newUrl (hash currentTheme.name newHighlightedToken)
+      , Navigation.newUrl (hashOf currentTheme.name newHighlightedToken)
       )
 
-    NoOp -> (model, Cmd.none)
+    NewLocation location ->
+      ( applyHashState location.hash model
+      , Cmd.none
+      )
 
 
 -- View
@@ -391,7 +406,7 @@ view model =
       [ position absolute
       , top (pc 1), right (pc 1), bottom (pc 1), left (pc 18)
       , overflow scroll
-      , fontSize (em 1.2)
+      , fontSize (em 1.5)
       ]
     ]
     [ ( Result.withDefault (text "Error")
@@ -406,7 +421,7 @@ view model =
 
 main : Program Never Model Msg
 main =
-  Navigation.program (always NoOp)
+  Navigation.program NewLocation
   { init = init
   , update = update
   , subscriptions = always Sub.none
