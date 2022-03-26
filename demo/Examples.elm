@@ -21,7 +21,7 @@ typeScriptExample =
 
 // Comment
 const Pi: number = 3.14
-const nan: number = NaN
+nan: number = NaN
 var num: number = 42
 let flag: boolean = true
 let iceCream: string = flag ? "chocolate" : "vanilla";
@@ -59,11 +59,19 @@ export class Polygon extends Thing {
     return this.name;
   }
 }
-function makePolygon(height: number): Polygon {
-  return new Polygon(height, product);
+function rotatePolygon(input: Polygon): Polygon {
+  return new Polygon(input.width, input.height);
 }
 let p: Polygon = makePolygon(1.4)
 p.getName()
+
+enum Direction {
+  NORTH = "n",
+  SOUTH = "s",
+  EAST = "e",
+  WEST = "w"
+}
+alert(Direction.NORTH)
 """
 
 

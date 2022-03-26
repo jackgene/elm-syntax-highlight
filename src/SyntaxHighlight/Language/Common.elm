@@ -63,8 +63,8 @@ type alias Delimiter a =
 delimited : Delimiter a -> Parser (List a)
 delimited ({ start, isNotRelevant, defaultMap } as options) =
   symbol start
-    |> map (always (defaultMap start))
-    |> andThen (\n -> delimitedHelp options [ n ])
+  |> map (always (defaultMap start))
+  |> andThen (\n -> delimitedHelp options [ n ])
 
 
 delimitedHelp : Delimiter a -> List a -> Parser (List a)
