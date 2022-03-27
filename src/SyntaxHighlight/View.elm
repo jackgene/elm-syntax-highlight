@@ -3,47 +3,96 @@ module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 import Css exposing
   ( property
   -- Container
-  , borderRight2, display, margin, margin4, padding4, position, width
+  , borderRight2, display, height, margin, margin4, padding4, position, top, width
   -- Sizes
-  , ch, em, pct, px, zero
+  , ch, em, int, pct, px, zero
   -- Other values
-  , absolute, before, inlineBlock, right, solid, textAlign
+  , absolute, before, inlineBlock, right, solid, textAlign, zIndex
   )
+import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled as Html exposing (Html, Attribute, text, span, code, div, pre)
 import Html.Styled.Attributes exposing (class, css)
 import SyntaxHighlight.Model exposing (..)
 
 
 -- Html
+lineHeight : Float
+lineHeight = 1.15
+
+
+transitionDurationMs : Float
+transitionDurationMs = 500
 
 
 toBlockHtml : Theme -> Maybe Int -> Block -> Html msg
 toBlockHtml theme maybeStart lines =
   pre
-  [ css [ position absolute, width (pct 100), margin zero, theme.default ]
+  [ css
+    [ position absolute
+    , width (pct 100)
+    , height (em (0.05 + lineHeight * toFloat (List.length lines)))
+    , margin zero, theme.default
+    , transition [ Css.Transitions.height3 500 0 easeInOut ]
+    ]
   , class "elmsh"
   ]
-  ( case maybeStart of
+  ( let
+      numberedLines : List (Int, Line)
+      numberedLines = List.indexedMap (,) lines
+
+      (deletionLines, nonDeletionLines) =
+        List.partition
+        ( \(_, line) -> line.highlight == Just Deletion )
+        numberedLines
+    in
+    case maybeStart of
       Nothing ->
-        List.map (div [] << lineView theme) lines
+        List.map
+        ( \(idx, line) ->
+          div
+          [ css
+            [ position absolute, top (em (lineHeight * toFloat idx)), width (pct 100)
+            , zIndex (int (if line.highlight == Just Deletion then 0 else 1))
+            , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
+            ]
+          ]
+          ( lineView theme line )
+        )
+        ( nonDeletionLines ++ deletionLines )
 
       Just start ->
-        List.indexedMap (numberedLineView theme start (start + List.length lines)) lines
+        ( List.indexedMap
+          ( \displayIdx (idx, line) ->
+            numberedLineView theme start (start + List.length lines) idx displayIdx line
+          )
+          nonDeletionLines
+        ++List.map
+          ( \(idx, line) ->
+            numberedLineView theme start (start + List.length lines) idx -1 line
+          )
+          deletionLines
+        )
   )
 
 
-numberedLineView : Theme -> Int -> Int -> Int -> Line -> Html msg
-numberedLineView theme start end index { tokens, highlight } =
+numberedLineView : Theme -> Int -> Int -> Int -> Int -> Line -> Html msg
+numberedLineView theme start end index displayedIndex { tokens, highlight } =
   div
   ( css
     [ before
-      [ property "content" ("\"" ++ (toString (start + index)) ++ "\"")
+      [ property "content"
+        ( if highlight == Just Deletion then "\" \""
+          else "\"" ++ (toString (start + displayedIndex)) ++ "\""
+        )
       , display inlineBlock, width (ch ((logBase 10 (toFloat end)) + 1.5))
-      , margin4 zero (em 1) zero zero, padding4 zero (em 0.5) zero zero
+      , margin4 zero (em 0.75) zero zero, padding4 zero (em 0.5) zero zero
       , borderRight2 (px 1) solid
       , textAlign right
       , theme.gutter
       ]
+    , position absolute, top (em (lineHeight * toFloat index)), width (pct 100)
+    , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
+    , zIndex (int (if highlight == Just Deletion then 0 else 1))
     ]
   ::( case highlight of
         Just highlight -> highlightStyleAttributes theme highlight
@@ -63,7 +112,7 @@ lineView theme {tokens, highlight} =
   case highlight of
     Nothing -> tokensView theme tokens
     Just highlight ->
-      [ span
+      [ div
         (highlightStyleAttributes theme highlight)
         (tokensView theme tokens)
       ]

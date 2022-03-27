@@ -299,7 +299,7 @@ update msg model =
     ToggleAddRemove highlightAddRemove ->
       ( { model
         | addAndRemovedLines =
-          if not highlightAddRemove then Set.empty else Set.fromList [ 1, 2, 5 ]
+          if not highlightAddRemove then Set.empty else Set.fromList [ 5 ]
         }
       , Cmd.none
       )
