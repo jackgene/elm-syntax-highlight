@@ -1,7 +1,8 @@
 module SyntaxHighlight.Language.Common exposing
   ( isWhitespace, whitespaceCharSet, isSpace, isLineBreak
   , number, isNumber, Delimiter, delimited
-  , thenIgnore, escapable, isEscapable, consThen, addThen
+  , thenIgnore, escapable, isEscapable
+  , consThen, addThen, consThenRevConcat
   )
 
 import Set exposing (Set)
@@ -184,3 +185,8 @@ escapableSet =
   , 'f'
   , 'v'
   ]
+
+
+consThenRevConcat : List a -> Parser (List (List a)) -> Parser (List a)
+consThenRevConcat toCons =
+  map ( (::) toCons >> List.reverse >> List.concat )

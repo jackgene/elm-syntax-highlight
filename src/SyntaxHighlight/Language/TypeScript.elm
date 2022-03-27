@@ -7,7 +7,7 @@ import Parser exposing
   )
 import SyntaxHighlight.Language.Common exposing
   ( Delimiter, isWhitespace, isSpace, isLineBreak, delimited, escapable
-  , isEscapable, addThen
+  , isEscapable, addThen, consThenRevConcat
   )
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
@@ -426,8 +426,3 @@ jsEscapable =
   |> source
   |> map ( \c -> ( LiteralKeyword, c ) )
   |> repeat oneOrMore
-
-
-consThenRevConcat : List Token -> Parser (List (List Token)) -> Parser (List Token)
-consThenRevConcat toCons =
-  map ( (::) toCons >> List.reverse >> List.concat )

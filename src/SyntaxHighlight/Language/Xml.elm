@@ -7,7 +7,7 @@ import Parser exposing
   )
 import SyntaxHighlight.Language.Common exposing
   ( Delimiter, addThen, consThen, delimited, isWhitespace, isSpace, isLineBreak
-  , thenIgnore
+  , thenIgnore, consThenRevConcat
   )
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
@@ -56,11 +56,7 @@ tag revTokens =
     |> andThen
       ( \n ->
         repeat zeroOrMore attributeLoop
-        |> map
-          ( (::) (n :: revTokens)
-            >> List.reverse
-            >> List.concat
-          )
+        |> consThenRevConcat (n :: revTokens)
       )
   , succeed revTokens
   ]
