@@ -91,12 +91,12 @@ numberedLineView theme start end index displayedIndex { tokens, highlight } =
       , theme.gutter
       ]
     , position absolute, top (em (lineHeight * toFloat index)), width (pct 100)
-    , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
     , zIndex (int (if highlight == Just Deletion then 0 else 1))
+    , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
     ]
   ::( case highlight of
         Just highlight -> highlightStyleAttributes theme highlight
-        Nothing -> []
+        Nothing -> [ css [ theme.default ] ]
     )
   )
   ( tokensView theme tokens )
@@ -113,8 +113,8 @@ lineView theme {tokens, highlight} =
     Nothing -> tokensView theme tokens
     Just highlight ->
       [ div
-        (highlightStyleAttributes theme highlight)
-        (tokensView theme tokens)
+        ( highlightStyleAttributes theme highlight )
+        ( tokensView theme tokens )
       ]
 
 
