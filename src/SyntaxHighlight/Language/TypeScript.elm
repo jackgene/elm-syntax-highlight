@@ -1,11 +1,18 @@
 module SyntaxHighlight.Language.TypeScript exposing (parseTokensReversed)
 
 import Set exposing (Set)
-import Parser exposing (Parser, oneOf, zeroOrMore, oneOrMore, ignore, symbol, (|.), (|=), source, keep, Count(..), Error, map, andThen, repeat, succeed)
-import SyntaxHighlight.Language.Common exposing (Delimiter, isWhitespace, isSpace, isLineBreak, delimited, escapable, isEscapable, addThen)
+import Parser exposing
+  ( Parser, oneOf, zeroOrMore, oneOrMore, ignore, symbol, (|.), (|=), source
+  , keep, Count(..), Error, map, andThen, repeat, succeed
+  )
+import SyntaxHighlight.Language.Common exposing
+  ( Delimiter, isWhitespace, isSpace, isLineBreak, delimited, escapable
+  , isEscapable, addThen
+  )
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
 
+-- TODO field declaration, reference
 parseTokensReversed : String -> Result Error (List Token)
 parseTokensReversed =
   Parser.run
@@ -64,9 +71,9 @@ functionDeclarationLoop =
   oneOf
   [ whitespaceOrComment
   , keep oneOrMore isIdentifierNameChar
-    |> map (\name -> [ ( FunctionDeclaration, name ) ])
+    |> map ( \name -> [ ( FunctionDeclaration, name ) ] )
   , symbol "*"
-    |> map (\_ -> [ ( Keyword, "*" ) ])
+    |> map ( \_ -> [ ( Keyword, "*" ) ] )
   , symbol "("
     |> andThen
       ( \_ ->
@@ -99,9 +106,9 @@ functionEvalLoop identifier revTokens =
     |> andThen
       ( \_ ->
         succeed
-          ((( Normal, "(" ) :: revTokens)
-            ++ [ ( FunctionReference, identifier ) ]
-          )
+        ( ( ( Normal, "(" ) :: revTokens )
+        ++[ ( FunctionReference, identifier ) ]
+        )
       )
   , succeed (revTokens ++ [ ( Normal, identifier ) ])
   ]
@@ -113,11 +120,11 @@ classDeclarationLoop =
   [ whitespaceOrComment
   , keep oneOrMore isIdentifierNameChar
     |> andThen
-      (\n ->
+      ( \n ->
         if n == "extends" then
           classExtendsLoop
-            |> repeat zeroOrMore
-            |> consThenRevConcat [ ( Keyword, n ) ]
+          |> repeat zeroOrMore
+          |> consThenRevConcat [ ( Keyword, n ) ]
         else
           succeed [ ( TypeDeclaration, n ) ]
       )
@@ -151,7 +158,6 @@ typeAnnotationLoop =
 isIdentifierNameChar : Char -> Bool
 isIdentifierNameChar c =
   not ( isPunctuaction c || isStringLiteralChar c || isCommentChar c || isWhitespace c )
-
 
 
 -- Reserved Words
@@ -236,7 +242,7 @@ punctuactorSet = Set.union operatorSet groupSet
 operatorChar : Parser Token
 operatorChar =
   keep oneOrMore isOperatorChar
-    |> map (\op -> ( Operator, op ))
+  |> map ( \op -> ( Operator, op ) )
 
 
 isOperatorChar : Char -> Bool
@@ -269,7 +275,7 @@ operatorSet =
 groupChar : Parser Token
 groupChar =
   keep oneOrMore isGroupChar
-    |> map (\name -> ( Normal, name ))
+  |> map ( \c -> ( Normal, c ) )
 
 
 isGroupChar : Char -> Bool
@@ -295,14 +301,13 @@ isLiteralKeyword str =
 literalKeywordSet : Set String
 literalKeywordSet =
   Set.fromList
-    [ "true"
-    , "false"
-    , "null"
-    , "undefined"
-    , "NaN"
-    , "Infinity"
-    ]
-
+  [ "true"
+  , "false"
+  , "null"
+  , "undefined"
+  , "NaN"
+  , "Infinity"
+  ]
 
 
 -- String literal
@@ -335,8 +340,8 @@ doubleQuote : Parser (List Token)
 doubleQuote =
   delimited
   { quoteDelimiter
-    | start = "\""
-    , end = "\""
+  | start = "\""
+  , end = "\""
   }
 
 
@@ -344,10 +349,10 @@ templateString : Parser (List Token)
 templateString =
   delimited
   { quoteDelimiter
-    | start = "`"
-    , end = "`"
-    , innerParsers = [ lineBreakList, jsEscapable ]
-    , isNotRelevant = \c -> not (isLineBreak c || isEscapable c)
+  | start = "`"
+  , end = "`"
+  , innerParsers = [ lineBreakList, jsEscapable ]
+  , isNotRelevant = \c -> not (isLineBreak c || isEscapable c)
   }
 
 
@@ -380,7 +385,7 @@ multilineComment =
   { start = "/*"
   , end = "*/"
   , isNestable = False
-  , defaultMap = \c -> (Comment, c)
+  , defaultMap = \c -> ( Comment, c )
   , innerParsers = [ lineBreakList ]
   , isNotRelevant = \c -> not (isLineBreak c)
   }
@@ -403,8 +408,8 @@ whitespaceOrComment =
 
 lineBreakList : Parser (List Token)
 lineBreakList =
-  keep (Exactly 1) isLineBreak
-  |> map (\c -> ( LineBreak, c ))
+  keep ( Exactly 1 ) isLineBreak
+  |> map ( \c -> ( LineBreak, c ) )
   |> repeat oneOrMore
 
 
@@ -419,10 +424,10 @@ jsEscapable : Parser (List Token)
 jsEscapable =
   escapable
   |> source
-  |> map (\c -> ( LiteralKeyword, c ))
+  |> map ( \c -> ( LiteralKeyword, c ) )
   |> repeat oneOrMore
 
 
 consThenRevConcat : List Token -> Parser (List (List Token)) -> Parser (List Token)
 consThenRevConcat toCons =
-  map ((::) toCons >> List.reverse >> List.concat)
+  map ( (::) toCons >> List.reverse >> List.concat )
