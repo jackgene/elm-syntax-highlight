@@ -8,7 +8,7 @@ import Dict exposing (Dict)
 import Examples exposing (..)
 import Html.Styled as Html exposing
   ( Attribute, Html
-  , div, fieldset, input, label, legend, option, select, text
+  , br, div, fieldset, input, label, legend, option, select, text
   )
 import Html.Styled.Attributes exposing (checked, css, selected, type_, value)
 import Html.Styled.Events exposing (on, onCheck, targetValue)
@@ -97,6 +97,20 @@ defaultTypeScriptSourceCode =
   SourceCode "TypeScript" typeScriptExample Language.typeScript
 
 
+defaultSourceCodesByLanguage : Dict String SourceCode
+defaultSourceCodesByLanguage =
+  Dict.fromList
+  ( List.map
+    ( \code -> (code.language, code) )
+    [ SourceCode "CSS" cssExample Language.typeScript
+    , SourceCode "Elm" elmExample Language.typeScript
+    , SourceCode "Python" pythonExample Language.python
+    , defaultTypeScriptSourceCode
+    , SourceCode "XML" xmlExample Language.typeScript
+    ]
+  )
+
+
 -- Common
 themeByName : HighlightedToken -> String -> Maybe NamedTheme
 themeByName highlightedToken name =
@@ -124,6 +138,14 @@ applyHashState hash model =
             _ -> Nothing
         )
         ( String.split "&" (String.dropLeft 1 hash) )
+      )
+
+    sourceCode : SourceCode
+    sourceCode =
+      Maybe.withDefault defaultTypeScriptSourceCode
+      ( Maybe.andThen
+        ( \languageName -> Dict.get languageName defaultSourceCodesByLanguage )
+        ( Dict.get "language" hashParams )
       )
 
     tokens : Set String
@@ -163,7 +185,11 @@ applyHashState hash model =
         ( Dict.get "theme" hashParams )
       )
   in
-  { model | theme = theme, highlightedToken = highlightedToken }
+  { model
+  | sourceCode = sourceCode
+  , theme = theme
+  , highlightedToken = highlightedToken
+  }
 
 
 -- Init
@@ -178,17 +204,7 @@ init : Location -> (Model, Cmd Msg)
 init location =
   ( applyHashState location.hash
     { sourceCode = defaultTypeScriptSourceCode
-    , sourceCodesByLanguage =
-      Dict.fromList
-      ( List.map
-        ( \code -> (code.language, code) )
-        [ SourceCode "CSS" cssExample Language.typeScript
-        , SourceCode "Elm" elmExample Language.typeScript
-        , SourceCode "Python" pythonExample Language.typeScript
-        , defaultTypeScriptSourceCode
-        , SourceCode "XML" xmlExample Language.typeScript
-        ]
-      )
+    , sourceCodesByLanguage = defaultSourceCodesByLanguage
     , firstLine = Just 1
     , theme = darcula
     , highlightedToken = emptyHighlightedToken
@@ -199,9 +215,10 @@ init location =
 
 -- Update
 type Msg
-  = NewLocation Location
+  = LanguageByName String
   | ThemeByName String
   | TokenHighlightingState (HighlightedToken -> Bool -> HighlightedToken) Bool
+  | NewLocation Location
 
 
 tokenHighlightingTheme : HighlightedToken -> Theme
@@ -236,9 +253,10 @@ tokenHighlightingTheme token =
   }
 
 
-hashOf : String -> HighlightedToken -> String
-hashOf themeName tokens =
-  "#theme=" ++ themeName ++
+hashOf : String -> String -> HighlightedToken -> String
+hashOf languageName themeName tokens =
+  "#language=" ++ languageName ++
+  "&theme=" ++ themeName ++
   ( if themeName /= highlightTokensThemeName then ""
     else
       "&tokens=" ++
@@ -268,11 +286,14 @@ hashOf themeName tokens =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    ThemeByName name ->
-      ( { model
-        | theme = Maybe.withDefault model.theme (themeByName model.highlightedToken name)
-        }
-      , Navigation.newUrl (hashOf name model.highlightedToken)
+    LanguageByName languageName ->
+      ( model
+      , Navigation.newUrl (hashOf languageName model.theme.name model.highlightedToken)
+      )
+
+    ThemeByName themeName ->
+      ( model
+      , Navigation.newUrl (hashOf model.sourceCode.language themeName model.highlightedToken)
       )
 
     TokenHighlightingState updateHighlightedToken highlight ->
@@ -290,7 +311,7 @@ update msg model =
           | definition = tokenHighlightingTheme newHighlightedToken
           }
         }
-      , Navigation.newUrl (hashOf currentTheme.name newHighlightedToken)
+      , Navigation.newUrl (hashOf model.sourceCode.language currentTheme.name newHighlightedToken)
       )
 
     NewLocation location ->
@@ -393,6 +414,12 @@ view model =
       ]
     ]
     ( label []
+      [ text "Language: "
+      , select [ onChange LanguageByName ]
+        (optionsView model.sourceCode.language (Dict.keys defaultSourceCodesByLanguage))
+      ]
+    ::br [] []
+    ::label []
       [ text "Theme: "
       , select [ onChange ThemeByName ]
         (optionsView model.theme.name ((Dict.keys themesByName) ++ [ highlightTokensThemeName ]))
@@ -409,12 +436,30 @@ view model =
       , fontSize (em 1.5)
       ]
     ]
-    [ ( Result.withDefault (text "Error")
-        ( Result.map
+    [ let
+        sourceCodeBlockRes : Result Parser.Error (Html Msg)
+        sourceCodeBlockRes =
+          Result.map
           ( toBlockHtml model.theme.definition (Just 1) )
           ( model.sourceCode.parser model.sourceCode.text )
-        )
-      )
+      in
+        case sourceCodeBlockRes of
+          Ok sourceCodeBlock -> sourceCodeBlock
+          Err error ->
+            text
+            ( "(" ++ toString error.row ++ ":" ++ toString error.col ++ ") " ++
+              case error.problem of
+              Parser.BadOneOf _ -> "BadOneOf ..."
+              Parser.BadInt -> "BadInt"
+              Parser.BadFloat -> "BadFloat"
+              Parser.BadRepeat -> "BadRepeat"
+              Parser.ExpectingEnd -> "Expectingend"
+              Parser.ExpectingSymbol s -> "ExpectingSymbol " ++ s
+              Parser.ExpectingKeyword s -> "ExpectingKeyword " ++ s
+              Parser.ExpectingVariable -> "ExpectingVariable."
+              Parser.ExpectingClosing s -> "ExpectingClosing " ++ s
+              Parser.Fail s -> "Fail " ++ s
+            )
     ]
   ]
 

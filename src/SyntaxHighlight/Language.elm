@@ -1,9 +1,16 @@
-module SyntaxHighlight.Language exposing (typeScript)
+module SyntaxHighlight.Language exposing (python, typeScript)
 
 
 import Parser
+import SyntaxHighlight.Language.Python as Python
 import SyntaxHighlight.Language.TypeScript as TypeScript
 import SyntaxHighlight.Model exposing (..)
+
+
+{-| Parse Python syntax.
+-}
+python : String -> Result Parser.Error Block
+python = Python.parseTokensReversed >> Result.map reverseAndBreakIntoLines
 
 
 {-| Parse TypeScript syntax.
