@@ -106,7 +106,7 @@ defaultSourceCodesByLanguage =
     , SourceCode "Elm" elmExample Language.typeScript
     , SourceCode "Python" pythonExample Language.python
     , defaultTypeScriptSourceCode
-    , SourceCode "XML" xmlExample Language.typeScript
+    , SourceCode "XML" xmlExample Language.xml
     ]
   )
 

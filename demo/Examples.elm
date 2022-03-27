@@ -1,6 +1,28 @@
 module Examples exposing (..)
 
 
+cssExample : String
+cssExample =
+  """stock::before {
+  display: block;
+  content: "To scale, the lengths of materials in stock are:";
+}
+stock > * {
+  display: block;
+  width: attr(length em); /* default 0 */
+  height: 1em;
+  border: solid thin;
+  margin: 0.5em;
+}
+.wood {
+  background: orange url(wood.png);
+}
+.metal {
+  background: #c0c0c0 url(metal.png);
+}
+"""
+
+
 elmExample : String
 elmExample =
   """module Main exposing (..)
@@ -12,6 +34,72 @@ import Html exposing (Html, text)
 main : Html a
 main =
   text "Hello, World!"
+"""
+
+
+pythonExample : String
+pythonExample =
+  """from enum import Enum
+from typing import *
+
+# Comment
+PI: float = 3.14
+num: Optional[int] = None
+nums: list[int] = [1, 2, 3]
+flag: bool = True
+iceCream: str = "chocolate" if flag else "vanilla"
+
+if iceCream == 'chocolate':
+    print(f'Yay, I love ${iceCream} ice cream!')
+else:
+    print('Awwww, but chocolate is my favorite...')
+
+
+def multiply(num1: float, num2: float) -> float:
+    result = num1 * num2 * 1.0
+    return result
+
+
+product: float = multiply(num, 10)
+
+
+class Thing:
+    pass
+
+
+class Polygon(Thing):
+    _name: str
+    _height: float
+    _width: float
+
+    def __init__(self, height: float, width: float):
+        super()
+        self._name = 'Polygon'
+        self._height = height
+        self._width = width
+
+    def get_name(self) -> str:
+        print("hello")
+        x = 1 * 2
+        return self._name
+
+
+def make_polygon(height: float) -> Polygon:
+    return Polygon(height, product)
+
+
+p: Polygon = make_polygon(1.4)
+p.get_name()
+
+
+class Direction(Enum):
+    NORTH = "n"
+    SOUTH = "s"
+    EAST = "e"
+    WEST = "w"
+
+
+print(Direction.NORTH)
 """
 
 
@@ -77,60 +165,13 @@ alert(Direction.NORTH)
 
 xmlExample : String
 xmlExample =
-  """<html>
-<head>
-  <title>Elm Syntax Highlight</title>
-</head>
-<body id="main">
-  <p class="hero">Hello World</p>
-</body>
+  """<!-- Comment -->
+<html>
+  <head>
+    <title>Elm Syntax Highlight</title>
+  </head>
+  <body id="main" number=42>
+    <p class="hero">Hello World</p>
+  </body>
 </html>
-"""
-
-
-cssExample : String
-cssExample =
-  """stock::before {
-  display: block;
-  content: "To scale, the lengths of materials in stock are:";
-}
-stock > * {
-  display: block;
-  width: attr(length em); /* default 0 */
-  height: 1em;
-  border: solid thin;
-  margin: 0.5em;
-}
-.wood {
-  background: orange url(wood.png);
-}
-.metal {
-  background: #c0c0c0 url(metal.png);
-}
-"""
-
-
-pythonExample : String
-pythonExample =
-  """ice_cream = 'chocolate'
-if ice_cream == 'chocolate':
-  print('Yay, I love chocolate ice cream!')
-else:
-  print('Awwww, but chocolate is my favorite...');
-
-# Multiply two numbers
-def multiply(a, b):
-  return a * b
-
-class Animal:
-  def __init__(self):
-    pass
-
-class Dog(Animal):
-  kind = 'canine'
-
-  def __init__(self, name):
-    self.name = name
-
-d = Dog('Fido')
 """
