@@ -9,7 +9,7 @@ type alias Block = List Line
 
 type alias Line =
   { tokens : List Token
-  , maybeHighlight : Maybe Highlight
+  , highlight : Maybe Highlight
   , errors : List ErrorSpan
   }
 

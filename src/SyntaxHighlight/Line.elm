@@ -11,30 +11,24 @@ module SyntaxHighlight.Line exposing (highlightLines)
 import SyntaxHighlight.Model exposing (..)
 
 
-highlightLines : Maybe Highlight -> Int -> Int -> List Line -> List Line
-highlightLines maybeHighlight start end lines =
-    let
-        length =
-            List.length lines
+highlightLines : Highlight -> Int -> Int -> Block -> Block
+highlightLines highlight start end lines =
+  let
+    length =
+      List.length lines
 
-        start_ =
-            if start < 0 then
-                length + start
-            else
-                start
+    adjStart =
+      if start >= 0 then start
+      else length + start
 
-        end_ =
-            if end < 0 then
-                length + end
-            else
-                end
-    in
-        List.indexedMap (highlightLinesHelp maybeHighlight start_ end_) lines
+    adjEnd =
+      if end >= 0 then end
+      else length + end
+  in
+  List.indexedMap (highlightLinesHelp highlight adjStart adjEnd) lines
 
 
-highlightLinesHelp : Maybe Highlight -> Int -> Int -> Int -> Line -> Line
-highlightLinesHelp maybeHighlight start end index line =
-    if index >= start && index < end then
-        { line | maybeHighlight = maybeHighlight }
-    else
-        line
+highlightLinesHelp : Highlight -> Int -> Int -> Int -> Line -> Line
+highlightLinesHelp highlight start end index line =
+  if index < start || index >= end then line
+  else { line | highlight = Just highlight }

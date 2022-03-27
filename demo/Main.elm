@@ -18,9 +18,10 @@ import Navigation exposing (Location)
 import Parser
 import Regex exposing (HowMany(..), regex)
 import Set exposing (Set)
-import SyntaxHighlight.Model exposing (Block, Theme)
+import SyntaxHighlight.Model exposing (Block, Highlight(..), Theme)
 import SyntaxHighlight exposing (toBlockHtml)
 import SyntaxHighlight.Language as Language
+import SyntaxHighlight.Line as Line
 import SyntaxHighlight.Theme as Theme
 import SyntaxHighlight.Theme.Common exposing
   ( bold, noEmphasis, noStyle, textColor )
@@ -64,6 +65,7 @@ type alias HighlightedToken =
 type alias Model =
   { sourceCode : SourceCode
   , sourceCodesByLanguage : Dict String SourceCode
+  , addAndRemovedLines : Set Int
   , firstLine : Maybe Int
   , theme : NamedTheme
   , highlightedToken : HighlightedToken
@@ -205,6 +207,7 @@ init location =
   ( applyHashState location.hash
     { sourceCode = defaultTypeScriptSourceCode
     , sourceCodesByLanguage = defaultSourceCodesByLanguage
+    , addAndRemovedLines = Set.empty
     , firstLine = Just 1
     , theme = darcula
     , highlightedToken = emptyHighlightedToken
@@ -216,6 +219,7 @@ init location =
 -- Update
 type Msg
   = LanguageByName String
+  | ToggleAddRemove Bool
   | ThemeByName String
   | TokenHighlightingState (HighlightedToken -> Bool -> HighlightedToken) Bool
   | NewLocation Location
@@ -288,12 +292,22 @@ update msg model =
   case msg of
     LanguageByName languageName ->
       ( model
-      , Navigation.newUrl (hashOf languageName model.theme.name model.highlightedToken)
+      , Navigation.newUrl
+        (hashOf languageName model.theme.name model.highlightedToken)
+      )
+
+    ToggleAddRemove highlightAddRemove ->
+      ( { model
+        | addAndRemovedLines =
+          if not highlightAddRemove then Set.empty else Set.fromList [ 1, 2, 5 ]
+        }
+      , Cmd.none
       )
 
     ThemeByName themeName ->
       ( model
-      , Navigation.newUrl (hashOf model.sourceCode.language themeName model.highlightedToken)
+      , Navigation.newUrl
+        (hashOf model.sourceCode.language themeName model.highlightedToken)
       )
 
     TokenHighlightingState updateHighlightedToken highlight ->
@@ -341,11 +355,24 @@ optionsView current =
 --  [ text labelText
 --  , input
 --    [ type_ "number"
---    , onInput (String.toInt >> Result.withDefault 0 >> msg)
+--    , onInput (msg << Result.withDefault 0 << String.toInt)
 --    , defaultValue (toString defaultVal)
 --    ]
 --    []
 --  ]
+
+
+booleanInput : String -> Bool -> (Bool -> Msg) -> Html Msg
+booleanInput labelText currentChecked msg =
+  label []
+  [ text labelText
+  , input
+    [ type_ "checkbox"
+    , checked currentChecked
+    , onCheck msg
+    ]
+    []
+  ]
 
 
 highlightTokenFormFieldView : String -> Bool -> (HighlightedToken -> Bool -> HighlightedToken) -> Html Msg
@@ -424,6 +451,8 @@ view model =
       , select [ onChange ThemeByName ]
         (optionsView model.theme.name ((Dict.keys themesByName) ++ [ highlightTokensThemeName ]))
       ]
+    ::br [] []
+    ::booleanInput "Add/Remove Lines: " (not (Set.isEmpty model.addAndRemovedLines)) ToggleAddRemove
     ::( if model.theme.name /= highlightTokensThemeName then []
         else [ highlightTokenFormView model.highlightedToken ]
       )
@@ -437,13 +466,28 @@ view model =
       ]
     ]
     [ let
-        sourceCodeBlockRes : Result Parser.Error (Html Msg)
-        sourceCodeBlockRes =
+        sourceCodeRes : Result Parser.Error (Html Msg)
+        sourceCodeRes =
           Result.map
-          ( toBlockHtml model.theme.definition (Just 1) )
+          ( \block ->
+            let
+              highlightedBlock : Block
+              highlightedBlock =
+                List.concatMap
+                ( \(idx, line) ->
+                  if not (Set.member (idx + 1) model.addAndRemovedLines) then [ line ]
+                  else
+                    ( Line.highlightLines Deletion 0 1 [ line ]
+                    ++Line.highlightLines Addition 0 1 [ line ]
+                    )
+                )
+                ( List.indexedMap (,) block )
+            in
+            toBlockHtml model.theme.definition (Just 1) highlightedBlock
+          )
           ( model.sourceCode.parser model.sourceCode.text )
       in
-        case sourceCodeBlockRes of
+        case sourceCodeRes of
           Ok sourceCodeBlock -> sourceCodeBlock
           Err error ->
             text

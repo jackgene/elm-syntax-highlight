@@ -3,11 +3,11 @@ module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 import Css exposing
   ( property
   -- Container
-  , borderRight2, display, margin, margin4, padding4, width
+  , borderRight2, display, margin, margin4, padding4, position, width
   -- Sizes
-  , ch, em, px, zero
+  , ch, em, pct, px, zero
   -- Other values
-  , before, inlineBlock, right, solid, textAlign
+  , absolute, before, inlineBlock, right, solid, textAlign
   )
 import Html.Styled as Html exposing (Html, Attribute, text, span, code, div, pre)
 import Html.Styled.Attributes exposing (class, css)
@@ -19,10 +19,13 @@ import SyntaxHighlight.Model exposing (..)
 
 toBlockHtml : Theme -> Maybe Int -> Block -> Html msg
 toBlockHtml theme maybeStart lines =
-  pre [ css [ margin zero, theme.default ], class "elmsh" ]
+  pre
+  [ css [ position absolute, width (pct 100), margin zero, theme.default ]
+  , class "elmsh"
+  ]
   ( case maybeStart of
       Nothing ->
-        List.map (pre [] << lineView theme) lines
+        List.map (div [] << lineView theme) lines
 
       Just start ->
         List.indexedMap (numberedLineView theme start (start + List.length lines)) lines
@@ -30,7 +33,7 @@ toBlockHtml theme maybeStart lines =
 
 
 numberedLineView : Theme -> Int -> Int -> Int -> Line -> Html msg
-numberedLineView theme start end index { tokens, maybeHighlight } =
+numberedLineView theme start end index { tokens, highlight } =
   div
   ( css
     [ before
@@ -42,9 +45,9 @@ numberedLineView theme start end index { tokens, maybeHighlight } =
       , theme.gutter
       ]
     ]
-  ::(case maybeHighlight of
-      Nothing -> []
-      Just highlight -> highlightStyleAttributes theme highlight
+  ::( case highlight of
+        Just highlight -> highlightStyleAttributes theme highlight
+        Nothing -> []
     )
   )
   ( tokensView theme tokens )
@@ -56,8 +59,8 @@ toInlineHtml theme line =
 
 
 lineView : Theme -> Line -> List (Html msg)
-lineView theme {tokens, maybeHighlight} =
-  case maybeHighlight of
+lineView theme {tokens, highlight} =
+  case highlight of
     Nothing -> tokensView theme tokens
     Just highlight ->
       [ span

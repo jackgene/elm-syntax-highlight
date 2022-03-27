@@ -69,6 +69,6 @@ reverseAndBreakIntoLines revTokens =
 tokensToLine : List Token -> Line
 tokensToLine tokens =
   { tokens = tokens
-  , maybeHighlight = Nothing
+  , highlight = Nothing
   , errors = []
   }

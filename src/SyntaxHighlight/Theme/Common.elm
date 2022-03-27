@@ -1,6 +1,7 @@
 module SyntaxHighlight.Theme.Common exposing (..)
 
-import Css exposing (Color, Style, fontStyle, fontWeight)
+import Css exposing
+  ( Color, Style, fontStyle, fontWeight, lineThrough, textDecoration )
 
 
 noStyle : Style
@@ -25,3 +26,7 @@ italic style = Css.batch [ style, fontStyle Css.italic ]
 
 bold : Style -> Style
 bold style = Css.batch [ style, fontWeight Css.bold ]
+
+
+strikeThrough : Style -> Style
+strikeThrough style = Css.batch [ style, textDecoration lineThrough]
