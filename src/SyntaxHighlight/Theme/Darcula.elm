@@ -1,6 +1,6 @@
 module SyntaxHighlight.Theme.Darcula exposing (theme)
 
-import Css exposing (Style, rgb)
+import Css exposing (Style, rgb, rgba)
 import Dict
 import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
@@ -17,8 +17,8 @@ theme =
   , selection = backgroundColor (rgb 50 50 50)
   , addition = backgroundColor (rgb 42 53 47)
   , deletion = strikeThrough (backgroundColor (rgb 53 42 47))
-  , error = squigglyUnderline (rgb 188 63 60)
-  , warning = squigglyUnderline (rgb 174 174 128)
+  , error = squigglyUnderline (rgba 236 70 66 0.75) --(rgb 188 63 60)
+  , warning = squigglyUnderline (rgba 218 218 156 0.75) --(rgb 174 174 128)
   , comment = textColor (rgb 120 120 120)
   , namespace = textColor (rgb 175 191 126)
   , keyword = keyword

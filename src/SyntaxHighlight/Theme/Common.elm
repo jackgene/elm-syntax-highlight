@@ -3,11 +3,11 @@ module SyntaxHighlight.Theme.Common exposing (..)
 import Css exposing
   ( Color, Style, property
   -- Container
-  , borderBottom3, bottom, left, marginBottom, position, width
+  , borderBottom3, bottom, left, paddingBottom, position, width
   -- Content
   , fontStyle, fontWeight, textDecoration
   -- Scalars
-  , pct, px
+  , ch, pct
   -- Other values
   , absolute, after, dotted, lineThrough
   )
@@ -44,12 +44,12 @@ strikeThrough style = Css.batch [ style, textDecoration lineThrough ]
 squigglyUnderline : Color -> Style
 squigglyUnderline color =
   Css.batch
-  [ borderBottom3 (px 2) dotted color
-  , marginBottom (px -2)
+  [ borderBottom3 (ch 0.25) dotted color
+  , paddingBottom (ch 0.05)
   , after
     [ property "content" "\"\""
-    , position absolute, bottom (px -1), left (px -2)
+    , position absolute, bottom (ch -0.125), left (ch -0.2)
     , width (pct 100)
-    , borderBottom3 (px 2) dotted color
+    , borderBottom3 (ch 0.25) dotted color
     ]
   ]

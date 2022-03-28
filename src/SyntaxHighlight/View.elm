@@ -3,7 +3,8 @@ module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 import Css exposing
   ( Style, property
   -- Container
-  , borderRight2, display, height, left, margin, margin4, padding4, position, top, width
+  , borderRight2, display, height, left, margin, marginRight
+  , paddingBottom, paddingRight, position, top, width
   -- Scalars
   , ch, em, int, pct, px, zero
   -- Other values
@@ -16,8 +17,8 @@ import SyntaxHighlight.Model exposing (..)
 
 
 -- Html
-lineHeight : Float
-lineHeight = 1.15
+lineHeightEm : Float
+lineHeightEm = 1.25
 
 
 transitionDurationMs : Float
@@ -30,8 +31,8 @@ toBlockHtml theme maybeStart lines =
   [ css
     [ position absolute
     , width (pct 100)
-    , height (em (0.05 + lineHeight * toFloat (List.length lines)))
-    , margin zero, theme.default
+    , height (em (0.05 + lineHeightEm * toFloat (List.length lines)))
+    , margin zero, theme.default, zIndex (int -1)
     , transition [ Css.Transitions.height3 500 0 easeInOut ]
     ]
   , class "elmsh"
@@ -51,7 +52,7 @@ toBlockHtml theme maybeStart lines =
         ( \(idx, line) ->
           div
           [ css
-            [ position absolute, top (em (lineHeight * toFloat idx)), width (pct 100)
+            [ position absolute, top (em (lineHeightEm * toFloat idx)), width (pct 100)
             , zIndex (int (if line.emphasis == Just Deletion then 0 else 1))
             , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
             ]
@@ -89,13 +90,13 @@ numberedLineView theme start end index displayedIndex { tokens, emphasis, column
           else "\"" ++ (toString (start + displayedIndex)) ++ "\""
         )
       , display inlineBlock, width (ch gutterWidth)
-      , margin4 zero (ch 1) zero zero, padding4 zero (ch 1) zero zero
+      , marginRight (ch 1), paddingRight (ch 1), paddingBottom (em (lineHeightEm - 1.15))
       , borderRight2 (px 1) solid
       , textAlign right
       , theme.gutter
       ]
-    , position absolute, top (em (lineHeight * toFloat index)), width (pct 100)
-    , zIndex (int (if emphasis == Just Deletion then 0 else 1))
+    , position absolute, top (em (lineHeightEm * toFloat index)), width (pct 100)
+    , zIndex (int (if emphasis == Just Deletion then -1 else 0))
     , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
     ]
   ::( case emphasis of
@@ -103,7 +104,7 @@ numberedLineView theme start end index displayedIndex { tokens, emphasis, column
         Nothing -> [ css [ theme.default ] ]
     )
   )
-  ( ( if List.isEmpty columnEmphases then [ div [ css [ errorSpanStyle ] ] [] ]
+  ( ( if List.isEmpty columnEmphases then [ div [ css [ errorSpanStyle, width zero ] ] [] ]
       else List.map (errorSpanView theme gutterWidth) columnEmphases
     )
   ++( tokensView theme tokens )
@@ -178,8 +179,8 @@ errorSpanView theme gutterWidth { emphasis, start, length } =
           Error -> theme.error
           Warning -> theme.warning
       )
-    , width (ch (toFloat length))
-    , left (ch (gutterWidth + 2 + toFloat start))
+    , width (ch (toFloat length - 0.25))
+    , left (ch (gutterWidth + 2.25 + toFloat start))
     ]
   ]
   []
@@ -188,7 +189,9 @@ errorSpanView theme gutterWidth { emphasis, start, length } =
 errorSpanStyle : Style
 errorSpanStyle =
   Css.batch
-  [ display inlineBlock, position absolute, height (em 1.05) ]
+  [ display inlineBlock, position absolute, height (em 1.05)
+  , transition [ Css.Transitions.width3 transitionDurationMs 0 easeInOut ]
+  ]
 
 
 classByTokenType : TokenType -> String

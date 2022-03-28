@@ -487,11 +487,16 @@ view model =
 
               emphasizedBlock : Block
               emphasizedBlock =
-                Line.emphasizeColumns
-                [ { emphasis = Warning, start = 1, length = 3 }
-                , { emphasis = Error, start = 7, length = 3 }
-                ]
-                7 lineEmphasizedBlock
+                if Set.isEmpty model.addAndRemovedLines then lineEmphasizedBlock
+                else
+                  Line.emphasizeColumns
+                  [ { emphasis = Error, start = 0, length = 6 }
+                  ] 0
+                  ( Line.emphasizeColumns
+                    [ { emphasis = Warning, start = 0, length = 3 }
+                    ]
+                    7 lineEmphasizedBlock
+                  )
             in
             toBlockHtml model.theme.definition (Just 1) emphasizedBlock
           )
