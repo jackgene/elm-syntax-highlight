@@ -32,7 +32,7 @@ toBlockHtml theme maybeStart lines =
     [ position absolute
     , width (pct 100)
     , height (em (0.05 + lineHeightEm * toFloat (List.length lines)))
-    , margin zero, theme.default, zIndex (int -1)
+    , margin zero, theme.default, zIndex (int 0)
     , transition [ Css.Transitions.height3 500 0 easeInOut ]
     ]
   , class "elmsh"
