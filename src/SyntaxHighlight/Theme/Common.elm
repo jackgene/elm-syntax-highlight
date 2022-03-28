@@ -1,7 +1,16 @@
 module SyntaxHighlight.Theme.Common exposing (..)
 
 import Css exposing
-  ( Color, Style, fontStyle, fontWeight, lineThrough, textDecoration )
+  ( Color, Style, property
+  -- Container
+  , borderBottom3, bottom, left, marginBottom, position, width
+  -- Content
+  , fontStyle, fontWeight, textDecoration
+  -- Scalars
+  , pct, px
+  -- Other values
+  , absolute, after, dotted, lineThrough
+  )
 
 
 noStyle : Style
@@ -29,4 +38,18 @@ bold style = Css.batch [ style, fontWeight Css.bold ]
 
 
 strikeThrough : Style -> Style
-strikeThrough style = Css.batch [ style, textDecoration lineThrough]
+strikeThrough style = Css.batch [ style, textDecoration lineThrough ]
+
+
+squigglyUnderline : Color -> Style
+squigglyUnderline color =
+  Css.batch
+  [ borderBottom3 (px 2) dotted color
+  , marginBottom (px -2)
+  , after
+    [ property "content" "\"\""
+    , position absolute, bottom (px -1), left (px -2)
+    , width (pct 100)
+    , borderBottom3 (px 2) dotted color
+    ]
+  ]

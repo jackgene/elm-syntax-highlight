@@ -9,8 +9,8 @@ type alias Block = List Line
 
 type alias Line =
   { tokens : List Token
-  , highlight : Maybe Highlight
-  , errors : List ErrorSpan
+  , emphasis : Maybe LineEmphasis
+  , columnEmphases : List ColumnEmphasis
   }
 
 
@@ -43,7 +43,7 @@ type TokenType
   | Other String
 
 
-{-| Highlight type.
+{-| LineEmphasis type.
 
   - `Selected` will highlight the line in a way to differentiate it from the rest, like github's yellow background.
   - `Addition` will highlight in a manner that gives the ideia of new content added.
@@ -52,16 +52,22 @@ type TokenType
 The specific styles will depend on the chosen `Theme`.
 
 -}
-type Highlight
-    = Selection
-    | Addition
-    | Deletion
+type LineEmphasis
+  = Selection
+  | Addition
+  | Deletion
 
 
-type alias ErrorSpan =
-    { start : Int
-    , length : Int
-    }
+type alias ColumnEmphasis =
+  { emphasis : ColumnEmphasisType
+  , start : Int
+  , length : Int
+  }
+
+
+type ColumnEmphasisType
+  = Error
+  | Warning
 
 
 type alias Theme =
@@ -69,6 +75,8 @@ type alias Theme =
   , selection : Style
   , addition : Style
   , deletion : Style
+  , error : Style
+  , warning : Style
   , comment : Style
   , namespace : Style
   , keyword : Style

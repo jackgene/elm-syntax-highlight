@@ -1,6 +1,6 @@
 module SyntaxHighlight.Theme.GitHub exposing (theme)
 
-import Css exposing (rgb)
+import Css exposing (rgb, rgba)
 import Dict
 import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
@@ -13,6 +13,8 @@ theme =
   , selection = backgroundColor (rgb 0xff 0xfb 0xdd)
   , addition = backgroundColor (rgb 0xea 0xff 0xea)
   , deletion = backgroundColor (rgb 0xff 0xec 0xec)
+  , error = squigglyUnderline (rgba 255 0 0 0.75)
+  , warning = squigglyUnderline (rgba 255 255 0 0.75)
   , comment = textColor (rgb 0x96 0x98 0x96)
   , number = textColor (rgb 0x00 0x5c 0xc5)
   , string = textColor (rgb 0xdf 0x50 0x00)

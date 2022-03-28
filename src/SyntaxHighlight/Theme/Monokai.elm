@@ -1,6 +1,6 @@
 module SyntaxHighlight.Theme.Monokai exposing (theme)
 
-import Css exposing (rgb)
+import Css exposing (rgb, rgba)
 import Dict
 import SyntaxHighlight.Model exposing (Theme)
 import SyntaxHighlight.Theme.Common exposing (..)
@@ -13,6 +13,8 @@ theme =
   , selection = backgroundColor (rgb 0x34 0x34 0x34)
   , addition = backgroundColor (rgb 0x00 0x38 0x00)
   , deletion = backgroundColor (rgb 0x38 0x00 0x00)
+  , error = squigglyUnderline (rgba 255 0 0 0.75)
+  , warning = squigglyUnderline (rgba 255 255 0 0.75)
   , comment = textColor (rgb 0x75 0x71 0x5e)
   , number = textColor (rgb 0xae 0x81 0xff)
   , string = textColor (rgb 0xe6 0xdb 0x74)

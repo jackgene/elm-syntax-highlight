@@ -1,10 +1,10 @@
 module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 
 import Css exposing
-  ( property
+  ( Style, property
   -- Container
-  , borderRight2, display, height, margin, margin4, padding4, position, top, width
-  -- Sizes
+  , borderRight2, display, height, left, margin, margin4, padding4, position, top, width
+  -- Scalars
   , ch, em, int, pct, px, zero
   -- Other values
   , absolute, before, inlineBlock, right, solid, textAlign, zIndex
@@ -42,7 +42,7 @@ toBlockHtml theme maybeStart lines =
 
       (deletionLines, nonDeletionLines) =
         List.partition
-        ( \(_, line) -> line.highlight == Just Deletion )
+        ( \(_, line) -> line.emphasis == Just Deletion )
         numberedLines
     in
     case maybeStart of
@@ -52,7 +52,7 @@ toBlockHtml theme maybeStart lines =
           div
           [ css
             [ position absolute, top (em (lineHeight * toFloat idx)), width (pct 100)
-            , zIndex (int (if line.highlight == Just Deletion then 0 else 1))
+            , zIndex (int (if line.emphasis == Just Deletion then 0 else 1))
             , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
             ]
           ]
@@ -76,30 +76,38 @@ toBlockHtml theme maybeStart lines =
 
 
 numberedLineView : Theme -> Int -> Int -> Int -> Int -> Line -> Html msg
-numberedLineView theme start end index displayedIndex { tokens, highlight } =
+numberedLineView theme start end index displayedIndex { tokens, emphasis, columnEmphases } =
+  let
+    gutterWidth : Float
+    gutterWidth = (logBase 10 (toFloat end)) + 1.5
+  in
   div
   ( css
     [ before
       [ property "content"
-        ( if highlight == Just Deletion then "\" \""
+        ( if emphasis == Just Deletion then "\" \""
           else "\"" ++ (toString (start + displayedIndex)) ++ "\""
         )
-      , display inlineBlock, width (ch ((logBase 10 (toFloat end)) + 1.5))
-      , margin4 zero (em 0.75) zero zero, padding4 zero (em 0.5) zero zero
+      , display inlineBlock, width (ch gutterWidth)
+      , margin4 zero (ch 1) zero zero, padding4 zero (ch 1) zero zero
       , borderRight2 (px 1) solid
       , textAlign right
       , theme.gutter
       ]
     , position absolute, top (em (lineHeight * toFloat index)), width (pct 100)
-    , zIndex (int (if highlight == Just Deletion then 0 else 1))
+    , zIndex (int (if emphasis == Just Deletion then 0 else 1))
     , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
     ]
-  ::( case highlight of
-        Just highlight -> highlightStyleAttributes theme highlight
+  ::( case emphasis of
+        Just emphasis -> lineEmphasisStyleAttributes theme emphasis
         Nothing -> [ css [ theme.default ] ]
     )
   )
-  ( tokensView theme tokens )
+  ( ( if List.isEmpty columnEmphases then [ div [ css [ errorSpanStyle ] ] [] ]
+      else List.map (errorSpanView theme gutterWidth) columnEmphases
+    )
+  ++( tokensView theme tokens )
+  )
 
 
 toInlineHtml : Theme -> Line -> Html msg
@@ -108,19 +116,19 @@ toInlineHtml theme line =
 
 
 lineView : Theme -> Line -> List (Html msg)
-lineView theme {tokens, highlight} =
-  case highlight of
+lineView theme {tokens, emphasis} =
+  case emphasis of
     Nothing -> tokensView theme tokens
-    Just highlight ->
+    Just emphasis ->
       [ div
-        ( highlightStyleAttributes theme highlight )
+        ( lineEmphasisStyleAttributes theme emphasis )
         ( tokensView theme tokens )
       ]
 
 
-highlightStyleAttributes : Theme -> Highlight -> List (Attribute msg)
-highlightStyleAttributes theme highlight =
-  case highlight of
+lineEmphasisStyleAttributes : Theme -> LineEmphasis -> List (Attribute msg)
+lineEmphasisStyleAttributes theme emphasis =
+  case emphasis of
     Selection -> [ class "elmsh-sel", css [ theme.selection ] ]
     Addition -> [ class "elmsh-add", css [ theme.addition ] ]
     Deletion -> [ class "elmsh-del", css [ theme.deletion ] ]
@@ -159,6 +167,28 @@ tokenView theme (tokenType, text) =
     , class (classByTokenType tokenType)
     ]
     [ Html.text text ]
+
+
+errorSpanView : Theme -> Float -> ColumnEmphasis -> Html msg
+errorSpanView theme gutterWidth { emphasis, start, length } =
+  div
+  [ css
+    [ errorSpanStyle
+    , ( case emphasis of
+          Error -> theme.error
+          Warning -> theme.warning
+      )
+    , width (ch (toFloat length))
+    , left (ch (gutterWidth + 2 + toFloat start))
+    ]
+  ]
+  []
+
+
+errorSpanStyle : Style
+errorSpanStyle =
+  Css.batch
+  [ display inlineBlock, position absolute, height (em 1.05) ]
 
 
 classByTokenType : TokenType -> String

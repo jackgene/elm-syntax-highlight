@@ -18,7 +18,7 @@ import Navigation exposing (Location)
 import Parser
 import Regex exposing (HowMany(..), regex)
 import Set exposing (Set)
-import SyntaxHighlight.Model exposing (Block, Highlight(..), Theme)
+import SyntaxHighlight.Model exposing (Block, ColumnEmphasisType(..), LineEmphasis(..), Theme)
 import SyntaxHighlight exposing (toBlockHtml)
 import SyntaxHighlight.Language as Language
 import SyntaxHighlight.Line as Line
@@ -235,6 +235,8 @@ tokenHighlightingTheme token =
   , selection = noStyle
   , addition = noStyle
   , deletion = noStyle
+  , error = noStyle
+  , warning = noStyle
   , comment = if token.comment then highlight else noStyle
   , namespace = if token.namespace then highlight else noStyle
   , keyword = if token.keyword then highlight else noStyle
@@ -471,19 +473,27 @@ view model =
           Result.map
           ( \block ->
             let
-              highlightedBlock : Block
-              highlightedBlock =
+              lineEmphasizedBlock : Block
+              lineEmphasizedBlock =
                 List.concatMap
                 ( \(idx, line) ->
                   if not (Set.member (idx + 1) model.addAndRemovedLines) then [ line ]
                   else
-                    ( Line.highlightLines Deletion 0 1 [ line ]
-                    ++Line.highlightLines Addition 0 1 [ line ]
+                    ( Line.emphasizeLines Deletion 0 1 [ line ]
+                    ++Line.emphasizeLines Addition 0 1 [ line ]
                     )
                 )
                 ( List.indexedMap (,) block )
+
+              emphasizedBlock : Block
+              emphasizedBlock =
+                Line.emphasizeColumns
+                [ { emphasis = Warning, start = 1, length = 3 }
+                , { emphasis = Error, start = 7, length = 3 }
+                ]
+                7 lineEmphasizedBlock
             in
-            toBlockHtml model.theme.definition (Just 1) highlightedBlock
+            toBlockHtml model.theme.definition (Just 1) emphasizedBlock
           )
           ( model.sourceCode.parser model.sourceCode.text )
       in

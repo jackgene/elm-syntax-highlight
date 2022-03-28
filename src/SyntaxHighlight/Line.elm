@@ -1,4 +1,4 @@
-module SyntaxHighlight.Line exposing (highlightLines)
+module SyntaxHighlight.Line exposing (emphasizeColumns, emphasizeLines)
 
 {-| A parsed highlighted line.
 
@@ -11,8 +11,8 @@ module SyntaxHighlight.Line exposing (highlightLines)
 import SyntaxHighlight.Model exposing (..)
 
 
-highlightLines : Highlight -> Int -> Int -> Block -> Block
-highlightLines highlight start end lines =
+emphasizeLines : LineEmphasis -> Int -> Int -> Block -> Block
+emphasizeLines emphasis start end lines =
   let
     length =
       List.length lines
@@ -25,10 +25,27 @@ highlightLines highlight start end lines =
       if end >= 0 then end
       else length + end
   in
-  List.indexedMap (highlightLinesHelp highlight adjStart adjEnd) lines
+  List.indexedMap
+  ( \index line ->
+    if index < adjStart || index >= adjEnd then line
+    else { line | emphasis = Just emphasis }
+  )
+  lines
 
 
-highlightLinesHelp : Highlight -> Int -> Int -> Int -> Line -> Line
-highlightLinesHelp highlight start end index line =
-  if index < start || index >= end then line
-  else { line | highlight = Just highlight }
+emphasizeColumns : List ColumnEmphasis -> Int -> Block -> Block
+emphasizeColumns emphases index lines =
+  let
+    length =
+      List.length lines
+
+    adjIndex =
+      if index >= 0 then index
+      else length + index
+  in
+  List.indexedMap
+  ( \index line ->
+    if index /= adjIndex then line
+    else { line | columnEmphases = emphases }
+  )
+  lines
