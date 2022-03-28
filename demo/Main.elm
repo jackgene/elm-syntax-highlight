@@ -105,7 +105,7 @@ defaultSourceCodesByLanguage =
   ( List.map
     ( \code -> (code.language, code) )
     [ SourceCode "CSS" cssExample Language.typeScript
-    , SourceCode "Elm" elmExample Language.typeScript
+    , SourceCode "Elm" elmExample Language.elm
     , SourceCode "Python" pythonExample Language.python
     , defaultTypeScriptSourceCode
     , SourceCode "XML" xmlExample Language.xml
@@ -454,10 +454,10 @@ view model =
         (optionsView model.theme.name ((Dict.keys themesByName) ++ [ highlightTokensThemeName ]))
       ]
     ::br [] []
-    ::booleanInput "Add/Remove Lines: " (not (Set.isEmpty model.addAndRemovedLines)) ToggleAddRemove
     ::( if model.theme.name /= highlightTokensThemeName then []
         else [ highlightTokenFormView model.highlightedToken ]
       )
+    ++[ booleanInput "Add/Remove Lines: " (not (Set.isEmpty model.addAndRemovedLines)) ToggleAddRemove ]
     )
   , div
     [ css

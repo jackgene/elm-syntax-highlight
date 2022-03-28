@@ -1,11 +1,18 @@
-module SyntaxHighlight.Language exposing (python, typeScript, xml)
+module SyntaxHighlight.Language exposing (elm, python, typeScript, xml)
 
 
 import Parser
+import SyntaxHighlight.Language.Elm as Elm
 import SyntaxHighlight.Language.Python as Python
 import SyntaxHighlight.Language.TypeScript as TypeScript
 import SyntaxHighlight.Language.Xml as Xml
 import SyntaxHighlight.Model exposing (..)
+
+
+{-| Parse Elm syntax.
+-}
+elm : String -> Result Parser.Error Block
+elm = Elm.parseTokensReversed >> Result.map reverseAndBreakIntoLines
 
 
 {-| Parse Python syntax.

@@ -29,6 +29,15 @@ elmExample =
 
 import Html exposing (Html, text)
 
+type Msg
+  = Increment
+  | Decrement
+
+type alias Model =
+  { count : Int
+  , name : String
+  }
+
 -- Main function
 
 main : Html a
