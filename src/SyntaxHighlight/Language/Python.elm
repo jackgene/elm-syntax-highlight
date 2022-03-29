@@ -13,7 +13,6 @@ import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
 
 -- Author: brandly (https://github.com/brandly)
--- TODO type declaration
 -- TODO field declaration, reference
 parseTokensReversed : String -> Result Error (List Token)
 parseTokensReversed =
@@ -29,6 +28,10 @@ mainLoop =
   oneOf
   [ whitespaceOrComment
   , stringLiteral
+  , symbol ":"
+    |> andThen (\_ -> typeAnnotationLoop ":")
+  , symbol "->"
+    |> andThen (\_ -> typeAnnotationLoop "->")
   , oneOf
     [ operatorChar
     , groupChar
@@ -83,29 +86,31 @@ functionDeclarationLoop =
 argLoop : Parser (List Token)
 argLoop =
   oneOf
-    [ whitespaceOrComment
-    , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ',' || c == ')'))
-      |> map (\name -> [ ( FunctionArgument, name ) ])
-    , keep oneOrMore (\c -> c == ',')
-      |> map (\sep -> [ ( Normal, sep ) ])
-    ]
+  [ whitespaceOrComment
+  , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ':' || c == ',' || c == ')'))
+    |> map (\name -> [ ( FunctionArgument, name ) ])
+  , symbol ":"
+    |> andThen (\_ -> typeAnnotationLoop ":")
+  , keep oneOrMore (\c -> c == ',')
+    |> map (\sep -> [ ( Normal, sep ) ])
+  ]
 
 
 functionEvalLoop : String -> List Token -> Parser (List Token)
 functionEvalLoop identifier revTokens =
   oneOf
-    [ whitespaceOrComment
-      |> addThen ( functionEvalLoop identifier ) revTokens
-    , symbol "("
-      |> andThen
-        ( \_ ->
-          succeed
-          ( ( ( Normal, "(" ) :: revTokens )
-          ++[ ( FunctionReference, identifier ) ]
-          )
+  [ whitespaceOrComment
+    |> addThen ( functionEvalLoop identifier ) revTokens
+  , symbol "("
+    |> andThen
+      ( \_ ->
+        succeed
+        ( ( ( Normal, "(" ) :: revTokens )
+        ++[ ( FunctionReference, identifier ) ]
         )
-    , succeed ( revTokens ++ [ ( Normal, identifier ) ] )
-    ]
+      )
+  , succeed ( revTokens ++ [ ( Normal, identifier ) ] )
+  ]
 
 
 classDeclarationLoop : Parser (List Token)
@@ -116,6 +121,22 @@ classDeclarationLoop =
   , keep oneOrMore isIdentifierNameChar
     |> map (\name -> [ ( TypeDeclaration, name ) ])
   ]
+
+
+typeAnnotationLoop : String -> Parser (List Token)
+typeAnnotationLoop op =
+  oneOf
+  [ keep oneOrMore isSpace
+    |> map ( \c -> [ ( Normal, c ) ] )
+  , keep oneOrMore isIdentifierNameChar
+    |> map
+      ( \name ->
+        if isBuiltIn name then [ ( BuiltIn, name ) ]
+        else [ ( TypeReference, name ) ]
+      )
+  ]
+  |> repeat zeroOrMore
+  |> consThenRevConcat [ ( Operator, op ) ]
 
 
 isIdentifierNameChar : Char -> Bool
