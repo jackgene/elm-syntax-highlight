@@ -5,11 +5,11 @@ import Css exposing
   -- Container
   , borderBottom3, bottom, left, paddingBottom, position, width
   -- Content
-  , fontStyle, fontWeight, textDecoration
+  , fontStyle, fontWeight, textDecoration3
   -- Scalars
   , ch, pct
   -- Other values
-  , absolute, after, dotted, lineThrough
+  , absolute, after, dotted, lineThrough, solid
   )
 
 
@@ -37,12 +37,16 @@ bold : Style -> Style
 bold style = Css.batch [ style, fontWeight Css.bold ]
 
 
-strikeThrough : Style -> Style
-strikeThrough style = Css.batch [ style, textDecoration lineThrough ]
+strikeThrough : Color -> Style -> Style
+strikeThrough color style =
+  Css.batch
+  [ style
+  , textDecoration3 lineThrough solid color
+  ]
 
 
-squigglyUnderline : Color -> Style
-squigglyUnderline color =
+squigglyUnderline : Color -> Style -> Style
+squigglyUnderline color style =
   Css.batch
   [ borderBottom3 (ch 0.25) dotted color
   , paddingBottom (ch 0.05)
@@ -52,4 +56,5 @@ squigglyUnderline color =
     , width (pct 100)
     , borderBottom3 (ch 0.25) dotted color
     ]
+  , style
   ]
