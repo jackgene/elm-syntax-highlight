@@ -117,7 +117,7 @@ typeScriptExample =
   """import { window } from "./exhaustive/exhaustive"
 
 // Comment
-const Pi: number = 3.14
+const Pi: number = 3.14 as number
 nan: number = NaN
 var num: number = 42
 let flag: boolean = true
@@ -134,7 +134,7 @@ function multiply(num1: number, num2: number): number {
   return result;
 }
 
-let product: number = multiply(num, 10)
+const product: number = multiply(num, 10 as number)
 
 class Thing {}
 
@@ -157,7 +157,7 @@ export class Polygon extends Thing {
   }
 }
 function rotatePolygon(input: Polygon): Polygon {
-  return new Polygon(input.width, input.height);
+  return new Polygon(input.width, input.height) as Shape;
 }
 let p: Polygon = makePolygon(1.4)
 p.getName()

@@ -2,8 +2,9 @@ module SyntaxHighlight.Language.TypeScript exposing (parseTokensReversed)
 
 import Set exposing (Set)
 import Parser exposing
-  ( Parser, oneOf, zeroOrMore, oneOrMore, ignore, symbol, (|.), (|=), source
-  , keep, Count(..), Error, map, andThen, repeat, succeed
+  ( Count(..), Error, Parser
+  , (|.), (|=), andThen, ignore, keep, keyword, map, oneOf, oneOrMore
+  , repeat, source, succeed, symbol, zeroOrMore
   )
 import SyntaxHighlight.Language.Common exposing
   ( Delimiter, isWhitespace, isSpace, isLineBreak, delimited, escapable
@@ -27,8 +28,9 @@ mainLoop =
   oneOf
   [ whitespaceOrComment
   , stringLiteral
-  , symbol ":"
-    |> andThen (\_ -> typeAnnotationLoop)
+  , oneOf [ symbol ":", keyword "as" ]
+    |> source
+    |> andThen typeAnnotationLoop
   , oneOf
     [ operatorChar
     , groupChar
@@ -91,7 +93,8 @@ argLoop =
   , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ':' || c == ',' || c == ')'))
     |> map (\name -> [ ( FunctionArgument, name ) ])
   , symbol ":"
-    |> andThen (\_ -> typeAnnotationLoop)
+    |> source
+    |> andThen typeAnnotationLoop
   , keep oneOrMore (\c -> c == ',')
     |> map (\sep -> [ ( Normal, sep ) ])
   ]
@@ -140,8 +143,8 @@ classExtendsLoop =
   ]
 
 
-typeAnnotationLoop : Parser (List Token)
-typeAnnotationLoop =
+typeAnnotationLoop : String -> Parser (List Token)
+typeAnnotationLoop op =
   oneOf
   [ whitespaceOrComment
   , keep oneOrMore isIdentifierNameChar
@@ -152,7 +155,7 @@ typeAnnotationLoop =
       )
   ]
   |> repeat zeroOrMore
-  |> consThenRevConcat [ ( Operator, ":" ) ]
+  |> consThenRevConcat [ ( Operator, op ) ]
 
 
 isIdentifierNameChar : Char -> Bool
