@@ -6,9 +6,9 @@ import Css exposing
   , borderRight2, display, height, left, margin, marginRight
   , paddingBottom, paddingRight, position, top, width
   -- Scalars
-  , ch, em, int, pct, px, zero
+  , ch, em, pct, px, zero
   -- Other values
-  , absolute, before, inlineBlock, right, solid, textAlign, zIndex
+  , absolute, before, inlineBlock, right, solid, textAlign
   )
 import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled as Html exposing (Html, Attribute, text, span, code, div, pre)
@@ -32,7 +32,7 @@ toBlockHtml theme maybeStart lines =
     [ position absolute
     , width (pct 100)
     , height (em (0.05 + lineHeightEm * toFloat (List.length lines)))
-    , margin zero, theme.default, zIndex (int 0)
+    , margin zero, theme.default
     , transition [ Css.Transitions.height3 500 0 easeInOut ]
     ]
   , class "elmsh"
@@ -53,8 +53,10 @@ toBlockHtml theme maybeStart lines =
           div
           [ css
             [ position absolute, top (em (lineHeightEm * toFloat idx)), width (pct 100)
-            , zIndex (int (if line.emphasis == Just Deletion then 0 else 1))
-            , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
+            , transition
+              ( if line.emphasis == Just Deletion then []
+                else [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
+              )
             ]
           ]
           ( lineView theme line )
@@ -69,7 +71,7 @@ toBlockHtml theme maybeStart lines =
           nonDeletionLines
         ++List.map
           ( \(idx, line) ->
-            numberedLineView theme start (start + List.length lines) idx -1 line
+            numberedLineView theme start (start + List.length lines) idx 0 line
           )
           deletionLines
         )
@@ -80,7 +82,7 @@ numberedLineView : Theme -> Int -> Int -> Int -> Int -> Line -> Html msg
 numberedLineView theme start end index displayedIndex { tokens, emphasis, columnEmphases } =
   let
     gutterWidth : Float
-    gutterWidth = (logBase 10 (toFloat end)) + 1.5
+    gutterWidth = toFloat (floor (logBase 10 (toFloat end))) + 2
   in
   div
   ( css
@@ -96,15 +98,17 @@ numberedLineView theme start end index displayedIndex { tokens, emphasis, column
       , theme.gutter
       ]
     , position absolute, top (em (lineHeightEm * toFloat index)), width (pct 100)
-    , zIndex (int (if emphasis == Just Deletion then -1 else 0))
-    , transition [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
+    , transition
+      ( if emphasis == Just Deletion then []
+        else [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
+      )
     ]
   ::( case emphasis of
         Just emphasis -> lineEmphasisStyleAttributes theme emphasis
         Nothing -> [ css [ theme.default ] ]
     )
   )
-  ( ( if List.isEmpty columnEmphases then [ div [ css [ errorSpanStyle, width zero ] ] [] ]
+  ( ( if List.isEmpty columnEmphases then List.repeat 2 ( div [ css [ errorSpanStyle, width zero ] ] [] )
       else List.map (errorSpanView theme gutterWidth) columnEmphases
     )
   ++( tokensView theme tokens )
