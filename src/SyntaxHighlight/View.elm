@@ -3,12 +3,12 @@ module SyntaxHighlight.View exposing (toBlockHtml, toInlineHtml)
 import Css exposing
   ( Style, property
   -- Container
-  , borderRight2, display, height, left, margin, marginRight
+  , borderRight2, display, height, left, margin, marginRight, overflowX
   , paddingBottom, paddingRight, position, top, width
   -- Scalars
   , ch, em, pct, px, zero
   -- Other values
-  , absolute, before, inlineBlock, right, solid, textAlign
+  , absolute, before, hidden, inlineBlock, right, solid, textAlign
   )
 import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled as Html exposing (Html, Attribute, text, span, code, div, pre)
@@ -108,7 +108,7 @@ numberedLineView theme start end index displayedIndex { tokens, emphasis, column
         Nothing -> [ css [ theme.default ] ]
     )
   )
-  ( ( if List.isEmpty columnEmphases then List.repeat 2 ( div [ css [ errorSpanStyle, width zero ] ] [] )
+  ( ( if List.isEmpty columnEmphases then List.repeat 2 ( span [ css [ errorSpanStyle, width zero ] ] [] )
       else List.map (errorSpanView theme gutterWidth) columnEmphases
     )
   ++( tokensView theme tokens )
@@ -176,7 +176,7 @@ tokenView theme (tokenType, text) =
 
 errorSpanView : Theme -> Float -> ColumnEmphasis -> Html msg
 errorSpanView theme gutterWidth { emphasis, start, length } =
-  div
+  span
   [ css
     [ errorSpanStyle
     , ( case emphasis of
@@ -187,13 +187,13 @@ errorSpanView theme gutterWidth { emphasis, start, length } =
     , left (ch (gutterWidth + 2.25 + toFloat start))
     ]
   ]
-  []
+  [ text (String.repeat length " ") ]
 
 
 errorSpanStyle : Style
 errorSpanStyle =
   Css.batch
-  [ display inlineBlock, position absolute, height (em 1.05)
+  [ position absolute, height (em lineHeightEm), overflowX hidden
   , transition [ Css.Transitions.width3 transitionDurationMs 0 easeInOut ]
   ]
 
