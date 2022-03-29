@@ -28,10 +28,9 @@ mainLoop =
   oneOf
   [ whitespaceOrComment
   , stringLiteral
-  , symbol ":"
-    |> andThen (\_ -> typeAnnotationLoop ":")
-  , symbol "->"
-    |> andThen (\_ -> typeAnnotationLoop "->")
+  , oneOf [ symbol ":", symbol "->" ]
+    |> source
+    |> andThen typeAnnotationLoop
   , oneOf
     [ operatorChar
     , groupChar
@@ -90,7 +89,8 @@ argLoop =
   , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ':' || c == ',' || c == ')'))
     |> map (\name -> [ ( FunctionArgument, name ) ])
   , symbol ":"
-    |> andThen (\_ -> typeAnnotationLoop ":")
+    |> source
+    |> andThen typeAnnotationLoop
   , keep oneOrMore (\c -> c == ',')
     |> map (\sep -> [ ( Normal, sep ) ])
   ]
@@ -308,11 +308,6 @@ doubleQuote =
   | start = "\""
   , end = "\""
   }
-
-
-isStringPrefixChar : Char -> Bool
-isStringPrefixChar c =
-  c == 'f' || c == 'r'
 
 
 isStringLiteralChar : Char -> Bool
