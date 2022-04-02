@@ -99,6 +99,7 @@ swift =
     , "Float", "Double"
     ]
   , typeCheckCast = oneOf [ keyword "as?", keyword "as!", keyword "as", keyword "is" ]
+  , annotationOperator = Just "@"
   }
 
 

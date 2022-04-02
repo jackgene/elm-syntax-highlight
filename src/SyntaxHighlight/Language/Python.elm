@@ -30,7 +30,10 @@ mainLoop =
   , stringLiteral
   , oneOf [ symbol ":", symbol "->" ]
     |> source
-    |> andThen typeAnnotationLoop
+    |> andThen typeReferenceLoop
+  , symbol "@"
+    |> source
+    |> andThen decoratorLoop
   , oneOf
     [ operatorChar
     , groupChar
@@ -90,7 +93,7 @@ argLoop =
     |> map (\name -> [ ( FunctionArgument, name ) ])
   , symbol ":"
     |> source
-    |> andThen typeAnnotationLoop
+    |> andThen typeReferenceLoop
   , keep oneOrMore (\c -> c == ',')
     |> map (\sep -> [ ( Normal, sep ) ])
   ]
@@ -123,8 +126,8 @@ classDeclarationLoop =
   ]
 
 
-typeAnnotationLoop : String -> Parser (List Token)
-typeAnnotationLoop op =
+typeReferenceLoop : String -> Parser (List Token)
+typeReferenceLoop op =
   oneOf
   [ keep oneOrMore isSpace
     |> map ( \c -> [ ( Normal, c ) ] )
@@ -137,6 +140,12 @@ typeAnnotationLoop op =
   ]
   |> repeat zeroOrMore
   |> consThenRevConcat [ ( Operator, op ) ]
+
+
+decoratorLoop : String -> Parser (List Token)
+decoratorLoop at =
+  keep oneOrMore isIdentifierNameChar
+  |> map ( \annotation -> [ ( Annotation, at ++ annotation) ] )
 
 
 isIdentifierNameChar : Char -> Bool

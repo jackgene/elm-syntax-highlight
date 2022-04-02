@@ -67,13 +67,18 @@ kotlin =
     Set.fromList [ "true", "false", "null" ]
   , builtIns =
     Set.fromList
-    [ "Bool", "Character", "String"
-    , "Int", "Int8", "Int16", "Int32", "Int64"
-    , "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
+    [ "Boolean", "Char", "String"
+    , "Byte", "Short", "Int", "Long"
+    , "UByte", "UShort", "UInt", "ULong"
     , "Float", "Double"
+    , "BooleanArray", "CharArray", "StringArray"
+    , "ByteArray", "ShortArray", "IntArray", "LongArray"
+    , "UByteArray", "UShortArray", "UIntArray", "ULongArray"
+    , "FloatArray", "DoubleArray"
     , "field", "it"
     ]
-  , typeCheckCast = oneOf [ keyword "as?", keyword "as!", keyword "as", keyword "is" ]
+  , typeCheckCast = oneOf [ keyword "as?", keyword "as", keyword "is", keyword "!is" ]
+  , annotationOperator = Just "@"
   }
 
 

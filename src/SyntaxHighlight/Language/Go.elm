@@ -48,6 +48,7 @@ go =
     , "make", "new", "panic", "print", "println", "real", "recover"
     ]
   , typeCheckCast = symbol ".("
+  , annotationOperator = Nothing
   }
 
 

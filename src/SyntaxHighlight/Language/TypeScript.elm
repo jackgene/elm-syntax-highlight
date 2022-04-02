@@ -66,6 +66,7 @@ javascript =
     ]
   , builtIns = Set.fromList [ "bigint", "boolean", "number", "string" ]
   , typeCheckCast = oneOf [ keyword "as", keyword "in" ]
+  , annotationOperator = Just "@"
   }
 
 

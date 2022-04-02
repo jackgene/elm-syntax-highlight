@@ -20,47 +20,55 @@ type alias Language =
   , literalKeywords : Set String
   , builtIns : Set String
   , typeCheckCast : Parser()
+  , annotationOperator : Maybe String
   }
 
 
 -- TODO type - casting vs annotation
--- TODO
+-- TODO parse namespage
 -- TODO field declaration, reference
 parseTokensReversed : Language -> String -> Result Error (List Token)
-parseTokensReversed language =
+parseTokensReversed opt =
   Parser.run
   ( map
     ( List.reverse >> List.concat )
-    ( repeat zeroOrMore (mainLoop language) )
+    ( repeat zeroOrMore (mainLoop opt) )
   )
 
 
 mainLoop : Language -> Parser (List Token)
-mainLoop lang =
+mainLoop opt =
   oneOf
-  [ whitespaceOrComment
-  , stringLiteral
-  , symbol "@"
-    |> source
-    |> andThen annotationLoop
-  , lang.typeCheckCast
-    |> source
-    |> andThen (typeReferenceLoop lang)
-  , oneOf
-    [ operatorChar
-    , groupChar
-    , number
+  ( [ whitespaceOrComment
+    , stringLiteral
     ]
-    |> map List.singleton
-  , keep oneOrMore isIdentifierNameChar -- TODO variables like "in1" when "in" is a keyword?
-    |> andThen (keywordParser lang)
-  ]
+  ++( case opt.annotationOperator of
+        Just annotationSymbol ->
+          [ symbol annotationSymbol
+          |> source
+          |> andThen annotationLoop
+          ]
+        Nothing -> []
+    )
+  ++[ opt.typeCheckCast
+      |> source
+      |> andThen (typeReferenceLoop opt)
+    , oneOf
+      [ operatorChar
+      , groupChar
+      , number
+      ]
+      |> map List.singleton
+    , keep oneOrMore isIdentifierNameChar -- TODO variables like "in1" when "in" is a keyword?
+      |> andThen (keywordParser opt)
+    ]
+  )
 
 
 keywordParser : Language -> String -> Parser (List Token)
-keywordParser lang n =
-  if n == lang.functionDeclarationKeyword then
-    functionDeclarationLoop lang
+keywordParser opt n =
+  if n == opt.functionDeclarationKeyword then
+    functionDeclarationLoop opt
     |> repeat zeroOrMore
     |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
   else if n == "class" || n == "enum" then
@@ -68,23 +76,23 @@ keywordParser lang n =
     |> repeat zeroOrMore
     |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
   else if n == "constructor" then
-    functionDeclarationLoop lang
+    functionDeclarationLoop opt
     |> repeat zeroOrMore
     |> consThenRevConcat [ ( FunctionDeclaration, n ) ]
-  else if Set.member n lang.keywords then
+  else if Set.member n opt.keywords then
     succeed [ ( Keyword, n ) ]
-  else if Set.member n lang.declarationKeywords then
+  else if Set.member n opt.declarationKeywords then
     succeed [ ( DeclarationKeyword, n ) ]
-  else if Set.member n lang.literalKeywords then
+  else if Set.member n opt.literalKeywords then
     succeed [ ( LiteralKeyword, n ) ]
-  else if Set.member n lang.builtIns then
+  else if Set.member n opt.builtIns then
     succeed [ ( BuiltIn, n ) ]
   else
     functionEvalLoop n []
 
 
 functionDeclarationLoop : Language -> Parser (List Token)
-functionDeclarationLoop lang =
+functionDeclarationLoop opt =
   oneOf
   [ whitespaceOrComment
   , keep oneOrMore isIdentifierNameChar
@@ -94,7 +102,7 @@ functionDeclarationLoop lang =
   , symbol "("
     |> andThen
       ( \_ ->
-        argLoop lang
+        argLoop opt
           |> repeat zeroOrMore
           |> consThenRevConcat [ ( Normal, "(" ) ]
       )
@@ -102,14 +110,14 @@ functionDeclarationLoop lang =
 
 
 argLoop : Language -> Parser (List Token)
-argLoop lang =
+argLoop opt =
   oneOf
   [ whitespaceOrComment
   , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ':' || c == ',' || c == ')'))
     |> map (\name -> [ ( FunctionArgument, name ) ])
   , symbol ":"
     |> source
-    |> andThen (typeReferenceLoop lang)
+    |> andThen (typeReferenceLoop opt)
   , keep oneOrMore (\c -> c == ',')
     |> map (\sep -> [ ( Normal, sep ) ])
   ]
@@ -161,19 +169,19 @@ classExtendsLoop =
 -- TODO Arrays/Dicts? Swift: `as? [Date]`, Go: `as []time.Time`
 -- TODO Keywords after? Swift: `guard x = y as? Date else ...`
 typeReferenceLoop : Language -> String -> Parser (List Token)
-typeReferenceLoop lang op =
+typeReferenceLoop opt op =
   oneOf
   [ keep oneOrMore isSpace
     |> map ( \c -> [ ( Normal, c ) ] )
   , keep oneOrMore isIdentifierNameChar
     |> map
       ( \name ->
-        if Set.member name lang.builtIns then [ ( BuiltIn, name ) ]
+        if Set.member name opt.builtIns then [ ( BuiltIn, name ) ]
         else [ ( TypeReference, name ) ]
       )
   ]
   |> repeat zeroOrMore
-  |> consThenRevConcat [ ( if Set.member op lang.keywords then Keyword else Operator, op ) ]
+  |> consThenRevConcat [ ( if Set.member op opt.keywords then Keyword else Operator, op ) ]
 
 
 annotationLoop : String -> Parser (List Token)
