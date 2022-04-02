@@ -1,9 +1,10 @@
 module SyntaxHighlight.Language exposing
-  ( elm, go, python, swift, typeScript, xml )
+  ( elm, go, kotlin, python, swift, typeScript, xml )
 
 import Parser
 import SyntaxHighlight.Language.Elm as Elm
 import SyntaxHighlight.Language.Go as Go
+import SyntaxHighlight.Language.Kotlin as Kotlin
 import SyntaxHighlight.Language.Python as Python
 import SyntaxHighlight.Language.Swift as Swift
 import SyntaxHighlight.Language.TypeScript as TypeScript
@@ -21,6 +22,12 @@ elm = Elm.parseTokensReversed >> Result.map reverseAndBreakIntoLines
 -}
 go : String -> Result Parser.Error Block
 go = Go.parseTokensReversed >> Result.map reverseAndBreakIntoLines
+
+
+{-| Parse Kotlin syntax.
+-}
+kotlin : String -> Result Parser.Error Block
+kotlin = Kotlin.parseTokensReversed >> Result.map reverseAndBreakIntoLines
 
 
 {-| Parse Python syntax.
