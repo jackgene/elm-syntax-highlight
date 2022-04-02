@@ -19,8 +19,9 @@ type alias Language =
   , declarationKeywords : Set String
   , literalKeywords : Set String
   , builtIns : Set String
-  , typeCheckCast : Parser()
-  , annotationOperator : Maybe String
+  , typeCheckCastOperator : Parser ()
+  , typeCheckCastKeywords : Set String
+  , annotation : Parser ()
   }
 
 
@@ -39,30 +40,23 @@ parseTokensReversed opt =
 mainLoop : Language -> Parser (List Token)
 mainLoop opt =
   oneOf
-  ( [ whitespaceOrComment
-    , stringLiteral
+  [ whitespaceOrComment
+  , stringLiteral
+  , opt.annotation
+    |> source
+    |> andThen annotationLoop
+  , opt.typeCheckCastOperator
+    |> source
+    |> andThen (typeReferenceLoop opt)
+  , oneOf
+    [ operatorChar
+    , groupChar
+    , number
     ]
-  ++( case opt.annotationOperator of
-        Just annotationSymbol ->
-          [ symbol annotationSymbol
-          |> source
-          |> andThen annotationLoop
-          ]
-        Nothing -> []
-    )
-  ++[ opt.typeCheckCast
-      |> source
-      |> andThen (typeReferenceLoop opt)
-    , oneOf
-      [ operatorChar
-      , groupChar
-      , number
-      ]
-      |> map List.singleton
-    , keep oneOrMore isIdentifierNameChar -- TODO variables like "in1" when "in" is a keyword?
-      |> andThen (keywordParser opt)
-    ]
-  )
+    |> map List.singleton
+  , keep oneOrMore isIdentifierNameChar
+    |> andThen (keywordParser opt)
+  ]
 
 
 keywordParser : Language -> String -> Parser (List Token)
@@ -79,6 +73,8 @@ keywordParser opt n =
     functionDeclarationLoop opt
     |> repeat zeroOrMore
     |> consThenRevConcat [ ( FunctionDeclaration, n ) ]
+  else if Set.member n opt.typeCheckCastKeywords then
+    typeReferenceLoop opt n
   else if Set.member n opt.keywords then
     succeed [ ( Keyword, n ) ]
   else if Set.member n opt.declarationKeywords then
@@ -88,7 +84,7 @@ keywordParser opt n =
   else if Set.member n opt.builtIns then
     succeed [ ( BuiltIn, n ) ]
   else
-    functionEvalLoop n []
+    variableOrfunctionReferenceLoop n []
 
 
 functionDeclarationLoop : Language -> Parser (List Token)
@@ -123,11 +119,11 @@ argLoop opt =
   ]
 
 
-functionEvalLoop : String -> List Token -> Parser (List Token)
-functionEvalLoop identifier revTokens =
+variableOrfunctionReferenceLoop : String -> List Token -> Parser (List Token)
+variableOrfunctionReferenceLoop identifier revTokens =
   oneOf
   [ whitespaceOrComment
-    |> addThen (functionEvalLoop identifier) revTokens
+    |> addThen (variableOrfunctionReferenceLoop identifier) revTokens
   , symbol "("
     |> andThen
       ( \_ ->

@@ -1,6 +1,6 @@
 module SyntaxHighlight.Language.Go exposing (parseTokensReversed)
 
-import Parser exposing (Error, symbol)
+import Parser exposing (Error, oneOf, symbol)
 import Set
 import SyntaxHighlight.Language.CLikeCommon as CLikeCommon
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
@@ -47,8 +47,9 @@ go =
     , "append", "cap", "close", "complex", "copy", "delete", "imag", "len"
     , "make", "new", "panic", "print", "println", "real", "recover"
     ]
-  , typeCheckCast = symbol ".("
-  , annotationOperator = Nothing
+  , typeCheckCastOperator = symbol ".("
+  , typeCheckCastKeywords = Set.empty
+  , annotation = oneOf []
   }
 
 

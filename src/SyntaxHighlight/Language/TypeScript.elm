@@ -1,13 +1,13 @@
 module SyntaxHighlight.Language.TypeScript exposing (parseTokensReversed)
 
-import Parser exposing (Error, keyword, oneOf)
+import Parser exposing (Error, oneOf, symbol)
 import Set
 import SyntaxHighlight.Language.CLikeCommon as CLikeCommon
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
 
-javascript : CLikeCommon.Language
-javascript =
+typescript : CLikeCommon.Language
+typescript =
   { functionDeclarationKeyword = "function"
   , keywords =
     Set.fromList
@@ -65,10 +65,11 @@ javascript =
     , "Infinity"
     ]
   , builtIns = Set.fromList [ "bigint", "boolean", "number", "string" ]
-  , typeCheckCast = oneOf [ keyword "as", keyword "in" ]
-  , annotationOperator = Just "@"
+  , typeCheckCastOperator = oneOf []
+  , typeCheckCastKeywords = Set.fromList [ "as", "in" ]
+  , annotation = symbol "@"
   }
 
 
 parseTokensReversed : String -> Result Error (List Token)
-parseTokensReversed = CLikeCommon.parseTokensReversed javascript
+parseTokensReversed = CLikeCommon.parseTokensReversed typescript

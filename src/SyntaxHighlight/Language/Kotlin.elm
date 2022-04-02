@@ -1,6 +1,6 @@
 module SyntaxHighlight.Language.Kotlin exposing (parseTokensReversed)
 
-import Parser exposing (Error, (|.), keyword, oneOf)
+import Parser exposing (Error, keyword, oneOf, symbol)
 import Set
 import SyntaxHighlight.Language.CLikeCommon as CLikeCommon
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
@@ -77,8 +77,9 @@ kotlin =
     , "FloatArray", "DoubleArray"
     , "field", "it"
     ]
-  , typeCheckCast = oneOf [ keyword "as?", keyword "as", keyword "is", keyword "!is" ]
-  , annotationOperator = Just "@"
+  , typeCheckCastOperator = oneOf [ keyword "as?", keyword "!is" ]
+  , typeCheckCastKeywords = Set.fromList [ "as", "is" ]
+  , annotation = symbol "@"
   }
 
 

@@ -1,6 +1,6 @@
 module SyntaxHighlight.Language.Swift exposing (parseTokensReversed)
 
-import Parser exposing (Error, (|.), keyword, oneOf)
+import Parser exposing (Error, keyword, oneOf, symbol)
 import Set
 import SyntaxHighlight.Language.CLikeCommon as CLikeCommon
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
@@ -98,8 +98,9 @@ swift =
     , "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
     , "Float", "Double"
     ]
-  , typeCheckCast = oneOf [ keyword "as?", keyword "as!", keyword "as", keyword "is" ]
-  , annotationOperator = Just "@"
+  , typeCheckCastOperator = oneOf [ keyword "as?", keyword "as!" ]
+  , typeCheckCastKeywords = Set.fromList [ "as", "is" ]
+  , annotation = symbol "@"
   }
 
 
