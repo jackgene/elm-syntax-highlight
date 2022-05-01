@@ -106,7 +106,10 @@ defaultSourceCodesByLanguage =
     ( \code -> (code.language, code) )
     [ SourceCode "CSS" cssExample Language.typeScript
     , SourceCode "Elm" elmExample Language.elm
+    , SourceCode "Go" goExample Language.go
+    , SourceCode "Kotlin" kotlinExample Language.kotlin
     , SourceCode "Python" pythonExample Language.python
+    , SourceCode "Swift" swiftExample Language.swift
     , defaultTypeScriptSourceCode
     , SourceCode "XML" xmlExample Language.xml
     ]
