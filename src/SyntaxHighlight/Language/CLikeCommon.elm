@@ -19,8 +19,11 @@ type alias Language =
   , declarationKeywords : Set String
   , literalKeywords : Set String
   , builtIns : Set String
+  , valueTypeAnnotationOperator : Char
+  , functionTypeAnnotation : Parser ()
   , typeCheckCastOperator : Parser ()
   , typeCheckCastKeywords : Set String
+  , typeReferenceSymbols : Parser ()
   , annotation : Parser ()
   }
 
@@ -64,15 +67,34 @@ keywordParser opt n =
   if n == opt.functionDeclarationKeyword then
     functionDeclarationLoop opt
     |> repeat zeroOrMore
+    |> andThen
+      -- TODO extract function?
+      ( \funcDeclRevTokens ->
+        symbol ")"
+        |> source
+        |> repeat zeroOrMore
+        |> map ( \closeParens -> List.map ( \c -> ( Operator, c ) ) closeParens )
+        |> andThen
+          ( \closeParensTokens ->
+            opt.functionTypeAnnotation
+            |> source
+            |> andThen (typeReferenceLoop opt)
+            |> repeat zeroOrMore
+            |> map
+              ( \typeRef ->
+                funcDeclRevTokens ++ [ closeParensTokens ] ++ typeRef
+              )
+          )
+      )
     |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
   else if n == "class" || n == "enum" then
     classDeclarationLoop
     |> repeat zeroOrMore
     |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
-  else if n == "constructor" then
-    functionDeclarationLoop opt
-    |> repeat zeroOrMore
-    |> consThenRevConcat [ ( FunctionDeclaration, n ) ]
+  --else if n == "constructor" then
+  --  functionDeclarationLoop opt
+  --  |> repeat zeroOrMore
+  --  |> consThenRevConcat [ ( FunctionDeclaration, n ) ]
   else if Set.member n opt.typeCheckCastKeywords then
     typeReferenceLoop opt n
   else if Set.member n opt.keywords then
@@ -84,7 +106,7 @@ keywordParser opt n =
   else if Set.member n opt.builtIns then
     succeed [ ( BuiltIn, n ) ]
   else
-    variableOrfunctionReferenceLoop n []
+    variableOrFunctionReferenceLoop opt n []
 
 
 functionDeclarationLoop : Language -> Parser (List Token)
@@ -93,42 +115,56 @@ functionDeclarationLoop opt =
   [ whitespaceOrComment
   , keep oneOrMore isIdentifierNameChar
     |> map ( \name -> [ ( FunctionDeclaration, name ) ] )
-  , symbol "*"
-    |> map ( \_ -> [ ( Keyword, "*" ) ] )
   , symbol "("
     |> andThen
       ( \_ ->
-        argLoop opt
-          |> repeat zeroOrMore
-          |> consThenRevConcat [ ( Normal, "(" ) ]
+        functionDeclarationArgLoop opt
+        |> repeat zeroOrMore
+        |> consThenRevConcat [ ( Operator, "(" ) ]
       )
   ]
 
 
-argLoop : Language -> Parser (List Token)
-argLoop opt =
+functionDeclarationArgLoop : Language -> Parser (List Token)
+functionDeclarationArgLoop opt =
   oneOf
   [ whitespaceOrComment
-  , keep oneOrMore (\c -> not (isCommentChar c || isWhitespace c || c == ':' || c == ',' || c == ')'))
-    |> map (\name -> [ ( FunctionArgument, name ) ])
-  , symbol ":"
-    |> source
-    |> andThen (typeReferenceLoop opt)
+  , keep oneOrMore
+    ( \c ->
+      not
+      ( isCommentChar c
+      ||isWhitespace c
+      ||c == opt.valueTypeAnnotationOperator
+      ||c == ','
+      ||c == ')'
+      )
+    )
+    |> andThen
+      ( \name ->
+        symbol (String.fromChar opt.valueTypeAnnotationOperator)
+        |> source
+        |> andThen (typeReferenceLoop opt)
+        |> repeat zeroOrMore
+        |> map ( \typeRef -> ( List.concat typeRef ) ++ [ ( FunctionArgument, name ) ] )
+      )
   , keep oneOrMore (\c -> c == ',')
-    |> map (\sep -> [ ( Normal, sep ) ])
+    |> map ( \sep -> [ ( Normal, sep ) ] )
   ]
 
 
-variableOrfunctionReferenceLoop : String -> List Token -> Parser (List Token)
-variableOrfunctionReferenceLoop identifier revTokens =
+variableOrFunctionReferenceLoop : Language -> String -> List Token -> Parser (List Token)
+variableOrFunctionReferenceLoop opt identifier revTokens =
   oneOf
-  [ whitespaceOrComment
-    |> addThen (variableOrfunctionReferenceLoop identifier) revTokens
+  [ symbol (String.fromChar opt.valueTypeAnnotationOperator)
+    |> source
+    |> andThen (typeReferenceLoop opt)
+    |> map ( \typeRef -> typeRef ++ [ ( Normal, identifier ) ] )
+  --, whitespaceOrComment
+  --  |> addThen (variableOrfunctionReferenceLoop opt identifier) revTokens
   , symbol "("
-    |> andThen
+    |> map
       ( \_ ->
-        succeed
-        ( ( ( Normal, "(" ) :: revTokens )
+        ( ( Operator, "(" ) :: revTokens
         ++[ ( FunctionReference, identifier ) ]
         )
       )
@@ -158,7 +194,7 @@ classExtendsLoop =
   oneOf
   [ whitespaceOrComment
   , keep oneOrMore isIdentifierNameChar
-    |> map (\name -> [ ( Normal, name ) ])
+    |> map ( \name -> [ ( Normal, name ) ] )
   ]
 
 
@@ -166,18 +202,29 @@ classExtendsLoop =
 -- TODO Keywords after? Swift: `guard x = y as? Date else ...`
 typeReferenceLoop : Language -> String -> Parser (List Token)
 typeReferenceLoop opt op =
-  oneOf
-  [ keep oneOrMore isSpace
-    |> map ( \c -> [ ( Normal, c ) ] )
-  , keep oneOrMore isIdentifierNameChar
-    |> map
-      ( \name ->
-        if Set.member name opt.builtIns then [ ( BuiltIn, name ) ]
-        else [ ( TypeReference, name ) ]
-      )
-  ]
-  |> repeat zeroOrMore
-  |> consThenRevConcat [ ( if Set.member op opt.keywords then Keyword else Operator, op ) ]
+  repeat zeroOrMore nonBreakingWhitespaceOrComment
+  |> andThen
+    ( \ws ->
+      oneOf
+      [ keep oneOrMore isIdentifierNameChar
+        |> map
+          ( \name ->
+            [ if Set.member name opt.builtIns then ( BuiltIn, name )
+              else ( TypeReference, name )
+            ]
+          )
+      , opt.typeReferenceSymbols
+        |> source
+        |> map ( \op -> [ ( Operator, op ) ] )
+      ]
+      |> repeat zeroOrMore
+      |> consThenRevConcat
+        ( List.reverse
+          ( ( if Set.member op opt.keywords then Keyword else Operator, op )
+          ::( List.concat ws )
+          )
+        )
+    )
 
 
 annotationLoop : String -> Parser (List Token)
@@ -236,7 +283,7 @@ operatorSet =
 groupChar : Parser Token
 groupChar =
   keep oneOrMore isGroupChar
-  |> map ( \c -> ( Normal, c ) )
+  |> map ( \c -> ( Operator, c ) )
 
 
 isGroupChar : Char -> Bool
@@ -346,6 +393,15 @@ whitespaceOrComment =
   [ keep oneOrMore isSpace
     |> map (\space -> [ ( Normal, space ) ])
   , lineBreakList
+  , comment
+  ]
+
+
+nonBreakingWhitespaceOrComment : Parser (List Token)
+nonBreakingWhitespaceOrComment =
+  oneOf
+  [ keep oneOrMore isSpace
+    |> map (\space -> [ ( Normal, space ) ])
   , comment
   ]
 

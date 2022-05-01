@@ -65,8 +65,11 @@ typescript =
     , "Infinity"
     ]
   , builtIns = Set.fromList [ "bigint", "boolean", "number", "string" ]
+  , valueTypeAnnotationOperator = ':'
+  , functionTypeAnnotation = symbol ":"
   , typeCheckCastOperator = oneOf []
   , typeCheckCastKeywords = Set.fromList [ "as", "in" ]
+  , typeReferenceSymbols = oneOf [ symbol "<", symbol ">", symbol "," ]
   , annotation = symbol "@"
   }
 

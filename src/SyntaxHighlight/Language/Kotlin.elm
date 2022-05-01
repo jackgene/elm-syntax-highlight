@@ -67,7 +67,8 @@ kotlin =
     Set.fromList [ "true", "false", "null" ]
   , builtIns =
     Set.fromList
-    [ "Boolean", "Char", "String"
+    [ "Any", "Array"
+    , "Boolean", "Char", "String"
     , "Byte", "Short", "Int", "Long"
     , "UByte", "UShort", "UInt", "ULong"
     , "Float", "Double"
@@ -77,8 +78,11 @@ kotlin =
     , "FloatArray", "DoubleArray"
     , "field", "it"
     ]
+  , valueTypeAnnotationOperator = ':'
+  , functionTypeAnnotation = symbol ":"
   , typeCheckCastOperator = oneOf [ keyword "as?", keyword "!is" ]
   , typeCheckCastKeywords = Set.fromList [ "as", "is" ]
+  , typeReferenceSymbols = oneOf [ symbol "<", symbol ">", symbol "," ]
   , annotation = symbol "@"
   }
 

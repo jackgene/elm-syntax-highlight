@@ -98,8 +98,11 @@ swift =
     , "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
     , "Float", "Double"
     ]
+  , valueTypeAnnotationOperator = ':'
+  , functionTypeAnnotation = symbol " ->"
   , typeCheckCastOperator = oneOf [ keyword "as?", keyword "as!" ]
   , typeCheckCastKeywords = Set.fromList [ "as", "is" ]
+  , typeReferenceSymbols = oneOf [ symbol "[", symbol "]", symbol ":" ]
   , annotation = symbol "@"
   }
 

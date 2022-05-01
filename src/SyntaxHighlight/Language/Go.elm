@@ -24,16 +24,13 @@ go =
     , "goto"
     , "if"
     , "import"
-    , "interface"
-    , "map"
     , "package"
     , "range"
     , "return"
     , "select"
-    , "struct"
     , "switch"
     ]
-  , declarationKeywords = Set.fromList [ "var", "const"
+  , declarationKeywords = Set.fromList [ "const", "interface", "struct", "var"
     -- TODO remove
     , "type" ]
   , literalKeywords =
@@ -44,11 +41,15 @@ go =
     , "int", "int8", "int16", "int32", "int64"
     , "uint", "uint8", "uint16", "uint32", "uint64", "uintptr"
     , "float32", "float64", "complex64", "complex128"
+    , "error", "map"
     , "append", "cap", "close", "complex", "copy", "delete", "imag", "len"
     , "make", "new", "panic", "print", "println", "real", "recover"
     ]
+  , valueTypeAnnotationOperator = ' '
+  , functionTypeAnnotation = symbol " "
   , typeCheckCastOperator = symbol ".("
   , typeCheckCastKeywords = Set.empty
+  , typeReferenceSymbols = oneOf [ symbol "[]", symbol "{}" ]
   , annotation = oneOf []
   }
 
