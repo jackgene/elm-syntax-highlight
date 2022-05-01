@@ -8,7 +8,7 @@ import Css exposing
   -- Scalars
   , ch, em, pct, px, zero
   -- Other values
-  , absolute, before, hidden, inlineBlock, right, solid, textAlign
+  , absolute, before, hidden, inlineBlock, relative, right, solid, textAlign
   )
 import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled as Html exposing (Html, Attribute, text, span, code, div, pre)
@@ -29,7 +29,7 @@ toBlockHtml : Theme -> Maybe Int -> Block -> Html msg
 toBlockHtml theme maybeStart lines =
   pre
   [ css
-    [ position absolute
+    [ position relative
     , width (pct 100)
     , height (em (0.05 + lineHeightEm * toFloat (List.length lines)))
     , margin zero, theme.default
