@@ -210,6 +210,7 @@ typeReferenceLoop opt op =
         |> map
           ( \name ->
             [ if Set.member name opt.builtIns then ( BuiltIn, name )
+              else if Set.member name opt.keywords then ( Keyword, name )
               else ( TypeReference, name )
             ]
           )
