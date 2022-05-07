@@ -97,7 +97,7 @@ numberedLineView theme start end index displayedIndex { tokens, emphasis, column
       , textAlign right
       , theme.gutter
       ]
-    , position absolute, top (em (lineHeightEm * toFloat index)), width (pct 100)
+    , position absolute, top (em ((0.075 + lineHeightEm) * toFloat index)), width (pct 100)
     , transition
       ( if emphasis == Just Deletion then []
         else [ Css.Transitions.top3 transitionDurationMs 0 easeInOut ]
