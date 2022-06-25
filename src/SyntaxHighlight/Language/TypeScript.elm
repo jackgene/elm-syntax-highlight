@@ -50,6 +50,7 @@ typescript =
     -- TypeScript
     , "as"
     , "export"
+    , "is"
     , "from"
     , "import"
     , "readonly"
@@ -64,7 +65,7 @@ typescript =
     , "NaN"
     , "Infinity"
     ]
-  , builtIns = Set.fromList [ "bigint", "boolean", "number", "string" ]
+  , builtIns = Set.fromList [ "any", "bigint", "boolean", "number", "string" ]
   , valueTypeAnnotationOperator = ':'
   , functionTypeAnnotation = symbol ":"
   , typeCheckCastOperator = oneOf []
