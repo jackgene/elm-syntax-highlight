@@ -169,6 +169,7 @@ keywordSet =
   , "as"
   , "assert"
   , "break"
+  , "case"
   , "continue"
   , "del"
   , "elif"
@@ -183,6 +184,7 @@ keywordSet =
   , "in"
   , "is"
   , "lambda"
+  , "match"
   , "nonlocal"
   , "not"
   , "or"
@@ -202,7 +204,7 @@ isBuiltIn str = Set.member str builtInSet
 
 builtInSet : Set String
 builtInSet =
-  Set.fromList [ "bool", "dict", "float", "int", "list", "str" ]
+  Set.fromList [ "bool", "dict", "float", "int", "list", "object", "str" ]
 
 
 isPunctuation : Char -> Bool
