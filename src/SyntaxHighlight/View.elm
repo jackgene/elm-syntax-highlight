@@ -66,12 +66,12 @@ toBlockHtml theme maybeStart lines =
       Just start ->
         ( List.indexedMap
           ( \displayIdx (idx, line) ->
-            numberedLineView theme start (start + List.length lines) idx displayIdx line
+            numberedLineView theme start (start - 1 + List.length lines) idx displayIdx line
           )
           nonDeletionLines
         ++List.map
           ( \(idx, line) ->
-            numberedLineView theme start (start + List.length lines) idx 0 line
+            numberedLineView theme start (start - 1 + List.length lines) idx 0 line
           )
           deletionLines
         )
