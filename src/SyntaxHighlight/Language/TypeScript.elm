@@ -65,12 +65,14 @@ typescript =
     , "NaN"
     , "Infinity"
     ]
-  , builtIns = Set.fromList [ "any", "bigint", "boolean", "number", "string" ]
+  , builtIns = Set.fromList [ "any", "bigint", "boolean", "null", "number", "string", "undefined" ]
   , valueTypeAnnotationOperator = ':'
   , functionTypeAnnotation = symbol ":"
   , typeCheckCastOperator = oneOf []
-  , typeCheckCastKeywords = Set.fromList [ "as", "in" ]
-  , typeReferenceSymbols = oneOf [ symbol "<", symbol ">", symbol "," ]
+  , typeCheckCastKeywords = Set.fromList [ "as", "in", "instanceof" ]
+  , typeReferenceSymbols = oneOf [ symbol "|", symbol "&", symbol " " ]
+  , typeReferenceGroupingSymbols = [ (symbol "<", symbol ">") ]
+  , typeReferenceInGroupSymbols = oneOf [ symbol "," ]
   , annotation = symbol "@"
   }
 

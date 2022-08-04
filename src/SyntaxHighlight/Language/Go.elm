@@ -51,6 +51,8 @@ go =
   , typeCheckCastOperator = symbol ".("
   , typeCheckCastKeywords = Set.empty
   , typeReferenceSymbols = oneOf [ symbol "[]", symbol "{}" ]
+  , typeReferenceGroupingSymbols = []
+  , typeReferenceInGroupSymbols = oneOf []
   , annotation = oneOf []
   }
 

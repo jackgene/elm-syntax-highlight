@@ -80,9 +80,11 @@ kotlin =
     ]
   , valueTypeAnnotationOperator = ':'
   , functionTypeAnnotation = symbol ":"
-  , typeCheckCastOperator = oneOf [ keyword "as?", keyword "!is" ]
+  , typeCheckCastOperator = oneOf [ keyword "as", keyword "!is" ]
   , typeCheckCastKeywords = Set.fromList [ "as", "is" ]
-  , typeReferenceSymbols = oneOf [ symbol "<", symbol ">", symbol "," ]
+  , typeReferenceSymbols = oneOf []
+  , typeReferenceGroupingSymbols = [ (symbol "<", symbol ">") ]
+  , typeReferenceInGroupSymbols = oneOf [ symbol ",", symbol " " ]
   , annotation = symbol "@"
   }
 

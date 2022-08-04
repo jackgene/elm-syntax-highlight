@@ -7,8 +7,8 @@ import Parser exposing
   , repeat, source, succeed, symbol, zeroOrMore
   )
 import SyntaxHighlight.Language.Common exposing
-  ( Delimiter, isWhitespace, isSpace, isLineBreak, delimited, escapable
-  , isEscapable, addThen, consThenRevConcat
+  ( Delimiter, isWhitespace, isSpace, isLineBreak, isNumber, delimited, escapable
+  , isEscapable, consThenRevConcat
   )
 import SyntaxHighlight.Model exposing (Token, TokenType(..))
 
@@ -24,6 +24,8 @@ type alias Language =
   , typeCheckCastOperator : Parser ()
   , typeCheckCastKeywords : Set String
   , typeReferenceSymbols : Parser ()
+  , typeReferenceGroupingSymbols : List (Parser (), Parser ())
+  , typeReferenceInGroupSymbols : Parser ()
   , annotation : Parser ()
   }
 
@@ -87,7 +89,7 @@ keywordParser opt n =
           )
       )
     |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
-  else if n == "class" || n == "enum" then
+  else if n == "class" then
     classDeclarationLoop
     |> repeat zeroOrMore
     |> consThenRevConcat [ ( DeclarationKeyword, n ) ]
@@ -160,7 +162,7 @@ variableOrFunctionReferenceLoop opt identifier revTokens =
     |> andThen (typeReferenceLoop opt)
     |> map ( \typeRef -> typeRef ++ [ ( Normal, identifier ) ] )
   --, whitespaceOrComment
-  --  |> addThen (variableOrfunctionReferenceLoop opt identifier) revTokens
+  --  |> addThen (variableOrFunctionReferenceLoop opt identifier) revTokens
   , symbol "("
     |> map
       ( \_ ->
@@ -198,33 +200,69 @@ classExtendsLoop =
   ]
 
 
--- TODO Arrays/Dicts? Swift: `as? [Date]`, Go: `as []time.Time`
--- TODO Keywords after? Swift: `guard x = y as? Date else ...`
 typeReferenceLoop : Language -> String -> Parser (List Token)
 typeReferenceLoop opt op =
   repeat zeroOrMore nonBreakingWhitespaceOrComment
   |> andThen
     ( \ws ->
-      oneOf
-      [ keep oneOrMore isIdentifierNameChar
-        |> map
-          ( \name ->
-            [ if Set.member name opt.builtIns then ( BuiltIn, name )
-              else if Set.member name opt.keywords then ( Keyword, name )
-              else ( TypeReference, name )
-            ]
-          )
-      , opt.typeReferenceSymbols
-        |> source
-        |> map ( \op -> [ ( Operator, op ) ] )
-      ]
-      |> repeat zeroOrMore
+      typeReferenceInnerLoop opt []
       |> consThenRevConcat
         ( List.reverse
           ( ( if Set.member op opt.keywords then Keyword else Operator, op )
           ::( List.concat ws )
           )
         )
+    )
+
+
+typeReferenceInnerLoop : Language -> List (Parser ()) -> Parser (List (List Token))
+typeReferenceInnerLoop opt groupCloses =
+  oneOf
+  [ keep oneOrMore isIdentifierNameChar
+    |> map
+      ( \name ->
+        [ if Set.member name opt.builtIns then ( BuiltIn, name )
+          else if Set.member name opt.keywords then ( Keyword, name )
+          else if Set.member name opt.declarationKeywords then ( DeclarationKeyword, name )
+          else ( TypeReference, name )
+        ]
+      )
+  , opt.typeReferenceSymbols
+    |> source
+    |> map ( \op -> [ ( Operator, op ) ] )
+  , oneOf
+    ( List.map
+      ( \(open, close) ->
+        open
+        |> source
+        |> map ( \op -> [ ( Operator, op ) ] )
+        |> andThen
+          ( \openGroupOp ->
+            typeReferenceInnerLoop opt (close :: groupCloses)
+            |> consThenRevConcat openGroupOp
+          )
+      )
+      opt.typeReferenceGroupingSymbols
+    )
+  , ( if List.isEmpty groupCloses then oneOf []
+      else
+        opt.typeReferenceInGroupSymbols
+        |> source
+        |> map ( \op -> [ ( Operator, op ) ] )
+    )
+  ]
+  |> repeat zeroOrMore
+  |> andThen
+    ( \typeRefTokens ->
+      case groupCloses of
+        close :: _ ->
+          oneOf
+          [ close
+            |> source
+            |> map ( \op -> typeRefTokens ++ [ [ ( Operator, op ) ] ] )
+          , succeed typeRefTokens
+          ]
+        [] -> succeed typeRefTokens
     )
 
 

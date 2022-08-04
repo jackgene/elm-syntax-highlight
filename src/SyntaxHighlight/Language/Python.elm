@@ -128,6 +128,12 @@ classDeclarationLoop =
 
 typeReferenceLoop : String -> Parser (List Token)
 typeReferenceLoop op =
+  typeReferenceInnerLoop []
+  |> consThenRevConcat [ ( Operator, op ) ]
+
+
+typeReferenceInnerLoop : List (Parser ()) -> Parser (List (List Token))
+typeReferenceInnerLoop groupCloses =
   oneOf
   [ keep oneOrMore isSpace
     |> map ( \c -> [ ( Normal, c ) ] )
@@ -137,9 +143,33 @@ typeReferenceLoop op =
         if isBuiltIn name then [ ( BuiltIn, name ) ]
         else [ ( TypeReference, name ) ]
       )
+  , oneOf [ symbol "|" ]
+    |> source
+    |> map ( \op -> [ ( Operator, op ) ] )
+  , symbol "["
+    |> source
+    |> map ( \op -> [ ( Operator, op ) ] )
+    |> andThen
+      ( \openGroupOp ->
+        typeReferenceInnerLoop (symbol "]" :: groupCloses)
+        |> consThenRevConcat openGroupOp
+      )
+  , symbol "("
+    |> source
+    |> map ( \op -> [ ( Operator, op ) ] )
+    |> andThen
+      ( \openGroupOp ->
+        typeReferenceInnerLoop (symbol ")" :: groupCloses)
+        |> consThenRevConcat openGroupOp
+      )
+  , ( if List.isEmpty groupCloses then oneOf []
+      else
+        oneOf [ symbol "," ]
+        |> source
+        |> map ( \op -> [ ( Operator, op ) ] )
+    )
   ]
   |> repeat zeroOrMore
-  |> consThenRevConcat [ ( Operator, op ) ]
 
 
 decoratorLoop : String -> Parser (List Token)

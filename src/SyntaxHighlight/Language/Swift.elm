@@ -100,9 +100,15 @@ swift =
     ]
   , valueTypeAnnotationOperator = ':'
   , functionTypeAnnotation = symbol " ->"
-  , typeCheckCastOperator = oneOf [ keyword "as?", keyword "as!" ]
+  , typeCheckCastOperator = oneOf [ keyword "as" ]
   , typeCheckCastKeywords = Set.fromList [ "as", "is" ]
-  , typeReferenceSymbols = oneOf [ symbol "[", symbol "]", symbol ":" ]
+  , typeReferenceSymbols = oneOf []
+  , typeReferenceGroupingSymbols =
+    [ (symbol "[", symbol "]")
+    , (symbol "(", symbol ")")
+    , (symbol "<", symbol ">")
+    ]
+  , typeReferenceInGroupSymbols = oneOf [ symbol ":", symbol ",", symbol " " ]
   , annotation = symbol "@"
   }
 
