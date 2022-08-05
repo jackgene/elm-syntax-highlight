@@ -150,7 +150,7 @@ functionDeclarationArgLoop opt =
         |> map ( \typeRef -> ( List.concat typeRef ) ++ [ ( FunctionArgument, name ) ] )
       )
   , keep oneOrMore (\c -> c == ',')
-    |> map ( \sep -> [ ( Normal, sep ) ] )
+    |> map ( \sep -> [ ( Operator, sep ) ] )
   ]
 
 
