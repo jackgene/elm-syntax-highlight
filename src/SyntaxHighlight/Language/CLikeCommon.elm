@@ -268,8 +268,15 @@ typeReferenceInnerLoop opt groupCloses =
 
 annotationLoop : String -> Parser (List Token)
 annotationLoop at =
-  keep oneOrMore isIdentifierNameChar
+  identifier
   |> map ( \annotation -> [ ( Annotation, at ++ annotation) ] )
+
+
+identifier : Parser String
+identifier =
+  succeed (++)
+  |= keep (Exactly 1) (\c -> isIdentifierNameChar c && not (isNumber c))
+  |= keep zeroOrMore isIdentifierNameChar
 
 
 isIdentifierNameChar : Char -> Bool
