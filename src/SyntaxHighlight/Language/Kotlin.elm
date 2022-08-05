@@ -64,7 +64,10 @@ kotlin =
     , "sealed", "suspend", "tailrec", "vararg"
     ]
   , literalKeywords =
-    Set.fromList [ "true", "false", "null" ]
+    Set.fromList
+    [ "true", "false", "null"
+    , "field", "it"
+    ]
   , builtIns =
     Set.fromList
     [ "Any", "Array"
@@ -76,7 +79,6 @@ kotlin =
     , "ByteArray", "ShortArray", "IntArray", "LongArray"
     , "UByteArray", "UShortArray", "UIntArray", "ULongArray"
     , "FloatArray", "DoubleArray"
-    , "field", "it"
     ]
   , valueTypeAnnotationOperator = ':'
   , functionTypeAnnotation = symbol ":"
