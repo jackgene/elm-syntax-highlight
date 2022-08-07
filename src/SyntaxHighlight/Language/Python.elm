@@ -80,7 +80,7 @@ functionDeclarationLoop =
       ( \_ ->
         argLoop
         |> repeat zeroOrMore
-        |> consThenRevConcat [ ( Normal, "(" ) ]
+        |> consThenRevConcat [ ( Operator, "(" ) ]
       )
   ]
 
@@ -95,7 +95,7 @@ argLoop =
     |> source
     |> andThen typeReferenceLoop
   , keep oneOrMore (\c -> c == ',')
-    |> map (\sep -> [ ( Normal, sep ) ])
+    |> map (\sep -> [ ( Operator, sep ) ])
   ]
 
 
@@ -108,7 +108,7 @@ functionEvalLoop identifier revTokens =
     |> andThen
       ( \_ ->
         succeed
-        ( ( ( Normal, "(" ) :: revTokens )
+        ( ( ( Operator, "(" ) :: revTokens )
         ++[ ( FunctionReference, identifier ) ]
         )
       )
@@ -283,7 +283,7 @@ operatorSet =
 groupChar : Parser Token
 groupChar =
   keep oneOrMore isGroupChar
-  |> map (\c -> ( Normal, c ))
+  |> map (\c -> ( Operator, c ))
 
 
 isGroupChar : Char -> Bool
@@ -312,6 +312,7 @@ literalKeywordSet =
   [ "True"
   , "False"
   , "None"
+  , "cls", "self"
   ]
 
 
