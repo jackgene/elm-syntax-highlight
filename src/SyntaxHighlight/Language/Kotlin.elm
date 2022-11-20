@@ -29,7 +29,7 @@ kotlin =
     , "if"
     , "import"
     , "in", "!in"
-    , "inint"
+    , "init"
     , "interface"
     , "is", "!is"
     , "object"
