@@ -170,6 +170,13 @@ variableOrFunctionReferenceLoop opt identifier revTokens =
         ++[ ( FunctionReference, identifier ) ]
         )
       )
+  , symbol "{"
+    |> map
+      ( \_ ->
+        ( ( Operator, "{" ) :: revTokens
+        ++[ ( FunctionReference, identifier ) ]
+        )
+      )
   , succeed (revTokens ++ [ ( Normal, identifier ) ])
   ]
 
